@@ -86,8 +86,8 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   Integer* digest = digest_buf;
   EMP_HMAC_Context context;
   HMAC_Reset(&context, key, key_length);
-  // HMAC_Input(&context, message, message_length);
-  // HMAC_Result(&context, digest);
+  HMAC_Input(&context, message, message_length);
+  HMAC_Result(&context, digest);
 
   Integer* digest_ptr = new Integer(); 
   digest_ptr = digest;
@@ -148,21 +148,20 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
   ctr[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  // Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
-  //cout << "PRINT LABEL OUTPUT" << endl;
-  //printIntegerArray(label,KEY_LENGTH,8);
-  // for (int i = 0; i < KEY_LENGTH; i++) {
-  	// tokens[i] = tk1[i];
-  // }
+  Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
+  cout << "PRINT LABEL OUTPUT" << endl;
+  for (int i = 0; i < KEY_LENGTH; i++) {
+  	tokens[i] = tk1[i];
+  }
 
-  // Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
+  Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
 
-  // for (int i = 0; i < KEY_LENGTH; i++) {
-  // 	tokens[KEY_LENGTH + i] = tk2[i];
-  // }
+  for (int i = 0; i < KEY_LENGTH; i++) {
+  	tokens[KEY_LENGTH + i] = tk2[i];
+  }
 
-  // cout << "PRINT TOKEN2 ARRAY" << endl;
-  // printIntegerArray(tokens,64,8);
+  cout << "PRINT TOKEN2 ARRAY" << endl;
+  printIntegerArray(tokens,64,8);
   Integer* output = tokens;
   return output;
 }
@@ -223,9 +222,8 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
- // testQuery1();  
-  //testUpdate2();
-//  cout << "PASSED" << endl;
+  testQuery1();  
+  cout << "PASSED" << endl;
 
   cout << "begin query 2pc" << endl;
 
@@ -296,23 +294,23 @@ int main(int argc, char** argv) {
     tokensB[i + KEY_LENGTH] = rprime_reconstruct[i];
   }
 
-  // cout << "Party 1 Output:";
-  // for (int i = 0; i < KEY_LENGTH * 2; i++) {
-  //   for (int j = 0; j < 8; j++) {
-  //     cout << tokensA[i][j].reveal(ALICE);
-  //   }
-  //   cout << ",";
-  // }
-  // cout << "End of Party 1 Output" << endl;
+  cout << "Party 1 Output:";
+  for (int i = 0; i < KEY_LENGTH * 2; i++) {
+    for (int j = 0; j < 8; j++) {
+      cout << tokensA[i][j].reveal(ALICE);
+    }
+    cout << ",";
+  }
+  cout << "End of Party 1 Output" << endl;
 
-  // cout << "Party 2 Output:";
-  // for (int i = 0; i < KEY_LENGTH * 2; i++) {
-  //   for (int j = 0; j < 8; j++) {
-  //     cout << tokensB[i][j].reveal(BOB);
-  //   }
-  //   cout << ",";
-  // }
-  // cout << "End of Party 2 Output" << endl;
+  cout << "Party 2 Output:";
+  for (int i = 0; i < KEY_LENGTH * 2; i++) {
+    for (int j = 0; j < 8; j++) {
+      cout << tokensB[i][j].reveal(BOB);
+    }
+    cout << ",";
+  }
+  cout << "End of Party 2 Output" << endl;
 
   delete io;
   return 0;
