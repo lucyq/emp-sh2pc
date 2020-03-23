@@ -72,12 +72,14 @@ Integer HMAC_Reset(EMP_HMAC_Context *context, Integer* key, int key_len)
   /* perform inner hash */
   /* init context for 1st pass */
   // ret = SHA256Reset((SHA256Context*)&context->shaContext)
-  
-  Integer ret = SHA256_Reset(&context->shaContext) |
-      /* and start with inner pad */
-        SHA256_Input(&context->shaContext, k_ipad, SHA256_Message_Block_Size);
   cout << "Len1: " << context->Computed.length << endl;
-  return context->Corrupted = ret;
+
+  SHA256_Reset(&context->shaContext);
+  cout << "Len2: " << context->Computed.length << endl;
+
+  SHA256_Input(&context->shaContext, k_ipad, SHA256_Message_Block_Size);
+
+  return context->Corrupted = Integer(INT_BITS, shaSuccess, PUBLIC);
 }
 
 
