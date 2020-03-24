@@ -148,8 +148,10 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
   ctr[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
   cout << "PRINT LABEL OUTPUT" << endl;
+  printIntegerArray(label_key, 32, 8);
+  Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
+  // cout << "PRINT LABEL OUTPUT" << endl;
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[i] = tk1[i];
   }
@@ -223,94 +225,94 @@ int main(int argc, char** argv) {
   setup_semi_honest(io, party);
 
   testQuery1();  
-  cout << "PASSED" << endl;
+  // cout << "PASSED" << endl;
 
-  cout << "begin query 2pc" << endl;
+  // cout << "begin query 2pc" << endl;
 
-  char* k_share = k_share_hex;
-  char* q = q_hex;
-  char* r = r_hex;
-  char* rprime = rprime_hex;
-  convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
-  convertHexToChar(q_hex,q,SN_LENGTH);
-  convertHexToChar(r_hex,r,RANDOM_LENGTH);
-  convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+  // char* k_share = k_share_hex;
+  // char* q = q_hex;
+  // char* r = r_hex;
+  // char* rprime = rprime_hex;
+  // convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
+  // convertHexToChar(q_hex,q,SN_LENGTH);
+  // convertHexToChar(r_hex,r,RANDOM_LENGTH);
+  // convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
 
-  static Integer k_reconstruct[KEY_LENGTH];
-  static Integer q_reconstruct[SN_LENGTH];
-  static Integer r_reconstruct[RANDOM_LENGTH];
-  static Integer rprime_reconstruct[RPRIME_LENGTH];
+  // static Integer k_reconstruct[KEY_LENGTH];
+  // static Integer q_reconstruct[SN_LENGTH];
+  // static Integer r_reconstruct[RANDOM_LENGTH];
+  // static Integer rprime_reconstruct[RPRIME_LENGTH];
 
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
-  }
-  printIntegerArray(k_reconstruct, KEY_LENGTH,8);
-
-  for (int i = 0; i < SN_LENGTH; i++) {
-    q_reconstruct[i] = Integer(8, q[i], PUBLIC);
-  }
-
-  for (int i = 0; i < RANDOM_LENGTH; i++) {
-    r_reconstruct[i] = Integer(8, r[i], PUBLIC);
-  }
-
-  for (int i = 0; i < RPRIME_LENGTH; i++) {
-    rprime_reconstruct[i] = Integer(8, rprime[i], PUBLIC);
-  }
-
+  // for (int i = 0; i < KEY_LENGTH; i++) {
+  //   k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
+  //   //k_reconstruct[i] = Integer(8, '1', PUBLIC);
+  // }
   // printIntegerArray(k_reconstruct, KEY_LENGTH,8);
 
-  // reconstructing everything between Alice and Bob 
-  xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
-  xor_reconstruct(q,q,SN_LENGTH, q_reconstruct); 
-  xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
-  xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
+  // for (int i = 0; i < SN_LENGTH; i++) {
+  //   q_reconstruct[i] = Integer(8, q[i], PUBLIC);
+  // }
 
-  Integer* k_reconstruct_ptr = k_reconstruct; 
-  Integer* q_reconstruct_ptr = q_reconstruct; 
-  Integer* r_reconstruct_ptr = r_reconstruct; 
-  Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
+  // for (int i = 0; i < RANDOM_LENGTH; i++) {
+  //   r_reconstruct[i] = Integer(8, r[i], PUBLIC);
+  // }
 
-  printIntegerArray(k_reconstruct_ptr, KEY_LENGTH,8);
+  // for (int i = 0; i < RPRIME_LENGTH; i++) {
+  //   rprime_reconstruct[i] = Integer(8, rprime[i], PUBLIC);
+  // }
 
-  // Calculate the token
+  // // printIntegerArray(k_reconstruct, KEY_LENGTH,8);
 
-  Integer* tokens = generate_secure_tokens(k_reconstruct_ptr,q_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
-  Integer tokensA[KEY_LENGTH * 2];
-  Integer tokensB[KEY_LENGTH * 2];
+  // // reconstructing everything between Alice and Bob 
+  // xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
+  // xor_reconstruct(q,q,SN_LENGTH, q_reconstruct); 
+  // xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
+  // xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    tokensA[i] = tokens[i] ^ r_reconstruct[i];
-  }
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    tokensA[i + KEY_LENGTH] = tokens[i + KEY_LENGTH] ^ rprime_reconstruct[i];
-  }
+  // Integer* k_reconstruct_ptr = k_reconstruct; 
+  // Integer* q_reconstruct_ptr = q_reconstruct; 
+  // Integer* r_reconstruct_ptr = r_reconstruct; 
+  // Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
 
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    tokensB[i] = r_reconstruct[i];
-  }
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    tokensB[i + KEY_LENGTH] = rprime_reconstruct[i];
-  }
+  // printIntegerArray(k_reconstruct_ptr, KEY_LENGTH,8);
 
-  cout << "Party 1 Output:";
-  for (int i = 0; i < KEY_LENGTH * 2; i++) {
-    for (int j = 0; j < 8; j++) {
-      cout << tokensA[i][j].reveal(ALICE);
-    }
-    cout << ",";
-  }
-  cout << "End of Party 1 Output" << endl;
+  // // Calculate the token
 
-  cout << "Party 2 Output:";
-  for (int i = 0; i < KEY_LENGTH * 2; i++) {
-    for (int j = 0; j < 8; j++) {
-      cout << tokensB[i][j].reveal(BOB);
-    }
-    cout << ",";
-  }
-  cout << "End of Party 2 Output" << endl;
+  // Integer* tokens = generate_secure_tokens(k_reconstruct_ptr,q_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
+  // Integer tokensA[KEY_LENGTH * 2];
+  // Integer tokensB[KEY_LENGTH * 2];
+
+  // for (int i = 0; i < KEY_LENGTH; i++) {
+  //   tokensA[i] = tokens[i] ^ r_reconstruct[i];
+  // }
+  // for (int i = 0; i < KEY_LENGTH; i++) {
+  //   tokensA[i + KEY_LENGTH] = tokens[i + KEY_LENGTH] ^ rprime_reconstruct[i];
+  // }
+
+  // for (int i = 0; i < KEY_LENGTH; i++) {
+  //   tokensB[i] = r_reconstruct[i];
+  // }
+  // for (int i = 0; i < KEY_LENGTH; i++) {
+  //   tokensB[i + KEY_LENGTH] = rprime_reconstruct[i];
+  // }
+
+  // cout << "Party 1 Output:";
+  // for (int i = 0; i < KEY_LENGTH * 2; i++) {
+  //   for (int j = 0; j < 8; j++) {
+  //     cout << tokensA[i][j].reveal(ALICE);
+  //   }
+  //   cout << ",";
+  // }
+  // cout << "End of Party 1 Output" << endl;
+
+  // cout << "Party 2 Output:";
+  // for (int i = 0; i < KEY_LENGTH * 2; i++) {
+  //   for (int j = 0; j < 8; j++) {
+  //     cout << tokensB[i][j].reveal(BOB);
+  //   }
+  //   cout << ",";
+  // }
+  // cout << "End of Party 2 Output" << endl;
 
   delete io;
   return 0;

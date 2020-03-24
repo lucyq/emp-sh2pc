@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  runSHA((char*) "hello", 5);
+  runSHA((char*) "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh", 144);
  
 
   delete io;
