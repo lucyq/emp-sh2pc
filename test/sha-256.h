@@ -280,7 +280,6 @@ Integer SHA256_Input(EMP_SHA256_CONTEXT *context, Integer *message_array, unsign
   if (!length) return Integer(INT_BITS, shaSuccess, PUBLIC); // 
   if (!message_array) return Integer(INT_BITS, shaNull, PUBLIC);
 
-  cout << "LENGTH: " << context->Computed.length << endl;
   context->Corrupted = context->Corrupted.select(context->Computed > Integer(INT_BITS, 0, PUBLIC), Integer(INT_BITS, shaStateError, PUBLIC));
   
   while (length--) {

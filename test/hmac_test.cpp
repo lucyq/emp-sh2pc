@@ -64,12 +64,13 @@ bool compareHash(uint8_t* sslHash, Integer* empHash) {
     bitset<8> sslBitset(sslHash[i]);
     for (int j = 7; j >= 0; j--) {
       if(empHash[i][j].reveal() != sslBitset[j]) {
+        cout << endl << "False" << endl;
         return false;
       }
     }
     cout <<  sslBitset << ", ";
   }
-  cout << endl << "TRUE?" << endl;
+  cout << endl << "True" << endl;
   return true;
 }
 
