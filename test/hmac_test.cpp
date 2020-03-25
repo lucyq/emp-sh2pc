@@ -87,12 +87,15 @@ void runHmac(char* message, int message_length, char* key, int key_length) {
   Integer* digest = digest_buf;
   EMP_HMAC_Context context;
   HMAC_Reset(&context, intKey, key_length);
-  cout << "After reset!" << endl;
-  printContext(&context, ALL, "input");
+ 
   HMAC_Input(&context, intMsg, message_length);
   cout << "After input" << endl;
   printContext(&context, ALL, "input");
   HMAC_Result(&context, digest);
+  cout << "After result" << endl;
+  printContext(&context, ALL, "result");
+ 
+ 
   printHash(digest);
 
   cout << "KEY: " << key << endl;

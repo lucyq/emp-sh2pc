@@ -150,11 +150,8 @@ Integer HMAC_Reset(EMP_HMAC_Context *context, Integer* key, int key_len)
   /* perform inner hash */
   /* init context for 1st pass */
   // ret = SHA256Reset((SHA256Context*)&context->shaContext)
-  printContext(context, 0, "DEBUG 1");
   SHA256_Reset(&context->shaContext);
-  printContext(context, 0, "DEBUG 2");
   SHA256_Input(&context->shaContext, k_ipad, SHA256_Message_Block_Size);
-  printContext(context, 0, "DEBUG 3");
   return context->Corrupted = Integer(INT_BITS, shaSuccess, PUBLIC);
 }
 
