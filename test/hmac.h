@@ -29,6 +29,80 @@ Integer k_opad[SHA256_Message_Block_Size];
 
 
 
+static int ALL = 0;
+static int Msg_Block = 1;
+static int Msg_Block_Index = 2;
+static int Msg_Intermediate_Hash = 4;
+void printInteger(Integer intToPrint, int bitSize) {
+  for (int i = bitSize -1; i >= 0; i--) {
+    cout << intToPrint[i].reveal();
+  }
+  return;
+}
+
+void printIntegerArray(Integer* intToPrint, int arraySize, int bitSize) {
+  for(int i = 0; i < arraySize; i++) {
+    printInteger(intToPrint[i], bitSize);
+    cout << ", ";
+  }
+  cout << endl;
+  return;
+}
+void printContext(EMP_HMAC_Context *context, int flag, string debugMsg) {
+  cout << debugMsg << endl;
+  EMP_SHA256_CONTEXT shaContext = context->shaContext;
+  if (flag == ALL || flag == Msg_Intermediate_Hash) {
+    cout << "Interemdiate Hash " << endl;
+    printIntegerArray(shaContext.Intermediate_Hash, INTERMEDIATE_HASH_LEN, 32);
+  }
+  if (flag == ALL) {
+    cout << "Length high " << endl;
+    printInteger(shaContext.Length_High, LENGTH_BITS);
+    cout << endl;
+  }
+  if (flag == ALL) {
+    cout << "Length low " << endl;
+    printInteger(shaContext.Length_Low, LENGTH_BITS);
+    cout << endl;
+  }  
+  if (flag == ALL || flag == Msg_Block_Index) { 
+    cout << "Message block index " << endl;
+    printInteger(shaContext.Message_Block_Index, MESSAGE_BLOCK_INDEX_BITS);
+    cout << endl;
+  }
+  if (flag == ALL || flag == Msg_Block) {
+    cout << "Message block contents " << endl;
+    printIntegerArray(shaContext.Message_Block, SHA256_Message_Block_Size, MESSAGE_BLOCK_BITS);
+  }
+}
+
+// void printContext(EMP_SHA256_CONTEXT *context, int flag, string debugMsg) {
+//   cout << debugMsg << endl;
+//   if (flag == ALL || flag == Msg_Intermediate_Hash) {
+//     cout << "Interemdiate Hash " << endl;
+//     printIntegerArray(context->Intermediate_Hash, INTERMEDIATE_HASH_LEN, 32);
+//   }
+//   if (flag == ALL) {
+//     cout << "Length high " << endl;
+//     printInteger(context->Length_High, LENGTH_BITS);
+//     cout << endl;
+//   }
+//   if (flag == ALL) {
+//     cout << "Length low " << endl;
+//     printInteger(context->Length_Low, LENGTH_BITS);
+//     cout << endl;
+//   }  
+//   if (flag == ALL || flag == Msg_Block_Index) { 
+//     cout << "Message block index " << endl;
+//     printInteger(context->Message_Block_Index, MESSAGE_BLOCK_INDEX_BITS);
+//     cout << endl;
+//   }
+//   if (flag == ALL || flag == Msg_Block) {
+//     cout << "Message block contents " << endl;
+//     printIntegerArray(context->Message_Block, SHA256_Message_Block_Size, MESSAGE_BLOCK_BITS);
+//   }
+// }
+
 
 Integer HMAC_Reset(EMP_HMAC_Context *context, Integer* key, int key_len)
 {
@@ -72,13 +146,11 @@ Integer HMAC_Reset(EMP_HMAC_Context *context, Integer* key, int key_len)
   /* perform inner hash */
   /* init context for 1st pass */
   // ret = SHA256Reset((SHA256Context*)&context->shaContext)
-  cout << "Len1: " << context->Computed.length << endl;
-
+  printContext(context, 0, "DEBUG 1");
   SHA256_Reset(&context->shaContext);
-  cout << "Len2: " << context->Computed.length << endl;
-
+  printContext(context, 0, "DEBUG 2");
   SHA256_Input(&context->shaContext, k_ipad, SHA256_Message_Block_Size);
-
+  printContext(context, 0, "DEBUG 3");
   return context->Corrupted = Integer(INT_BITS, shaSuccess, PUBLIC);
 }
 

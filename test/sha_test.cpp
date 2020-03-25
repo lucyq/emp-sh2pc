@@ -7,7 +7,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "hmac.h"
+// #include "hmac.h"
+#include "sha-256.h"
 
 using namespace emp;
 using namespace std; 

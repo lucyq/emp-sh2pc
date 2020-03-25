@@ -16,12 +16,6 @@ enum {
   SN_LENGTH = 12, KEY_LENGTH = 32, RANDOM_LENGTH = 32, RPRIME_LENGTH = 32, TOKEN_LENGTH = 1
 };
 
-void printInteger(Integer intToPrint, int bitSize) {
-  for (int i = bitSize -1; i >= 0; i--) {
-    cout << intToPrint[i].reveal();
-  }
-  return;
-}
 
 void printarray(char* array, int ARRAY_LENGTH) {
     for (int i = 0; i <ARRAY_LENGTH; i ++) {
@@ -33,14 +27,6 @@ void printarray(char* array, int ARRAY_LENGTH) {
   cout << endl;
 }
 
-void printIntegerArray(Integer* intToPrint, int arraySize, int bitSize) {
-  for(int i = 0; i < arraySize; i++) {
-    printInteger(intToPrint[i], bitSize);
-    cout << ", ";
-  }
-  cout << endl;
-  return;
-}
 
 void printHash(Integer* Message_Digest) {
   cout << "Printing output hash: " << endl;

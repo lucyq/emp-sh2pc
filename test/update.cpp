@@ -25,25 +25,6 @@ enum {
 // static int TOKEN_LENGTH = 1;
 
 
-/* * * * * * * * * * * * 
- *  D E B U G G I N G  *
- * * * * * * * * * * * */
-void printInteger(Integer intToPrint, int bitSize) {
-  for (int i = bitSize -1; i >= 0; i--) {
-    cout << intToPrint[i].reveal();
-  }
-  return;
-}
-
-void printIntegerArray(Integer* intToPrint, int arraySize, int bitSize) {
-  for(int i = 0; i < arraySize; i++) {
-    printInteger(intToPrint[i], bitSize);
-    cout << ", ";
-  }
-  cout << endl;
-  return;
-}
-
 void printarray(char* array, int ARRAY_LENGTH) {
     for (int i = 0; i <ARRAY_LENGTH; i ++) {
       for (int j = 0; j < 8; j++) {
@@ -53,11 +34,6 @@ void printarray(char* array, int ARRAY_LENGTH) {
     }
   cout << endl;
 }
-
-static int ALL = 0;
-static int Msg_Block = 1;
-static int Msg_Block_Index = 2;
-static int Msg_Intermediate_Hash = 4;
 
 void printContext(EMP_SHA256_CONTEXT *context, int flag, string debugMsg) {
   cout << debugMsg << endl;

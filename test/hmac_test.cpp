@@ -20,21 +20,7 @@ enum {
 /* * * * * * * * * * * * 
  *  D E B U G G I N G  *
  * * * * * * * * * * * */
-void printInteger(Integer intToPrint, int bitSize) {
-  for (int i = bitSize -1; i >= 0; i--) {
-    cout << intToPrint[i].reveal();
-  }
-  return;
-}
 
-void printIntegerArray(Integer* intToPrint, int arraySize, int bitSize) {
-  for(int i = 0; i < arraySize; i++) {
-    printInteger(intToPrint[i], bitSize);
-    cout << ", ";
-  }
-  cout << endl;
-  return;
-}
 
 void printarray(char* array, int ARRAY_LENGTH) {
     for (int i = 0; i <ARRAY_LENGTH; i ++) {
@@ -46,38 +32,6 @@ void printarray(char* array, int ARRAY_LENGTH) {
   cout << endl;
 }
 
-static int ALL = 0;
-static int Msg_Block = 1;
-static int Msg_Block_Index = 2;
-static int Msg_Intermediate_Hash = 4;
-
-void printContext(EMP_HMAC_Context *context, int flag, string debugMsg) {
-  cout << debugMsg << endl;
-  EMP_SHA256_CONTEXT shaContext = context->shaContext;
-  if (flag == ALL || flag == Msg_Intermediate_Hash) {
-    cout << "Interemdiate Hash " << endl;
-    printIntegerArray(shaContext.Intermediate_Hash, INTERMEDIATE_HASH_LEN, 32);
-  }
-  if (flag == ALL) {
-    cout << "Length high " << endl;
-    printInteger(shaContext.Length_High, LENGTH_BITS);
-    cout << endl;
-  }
-  if (flag == ALL) {
-    cout << "Length low " << endl;
-    printInteger(shaContext.Length_Low, LENGTH_BITS);
-    cout << endl;
-  }  
-  if (flag == ALL || flag == Msg_Block_Index) { 
-    cout << "Message block index " << endl;
-    printInteger(shaContext.Message_Block_Index, MESSAGE_BLOCK_INDEX_BITS);
-    cout << endl;
-  }
-  if (flag == ALL || flag == Msg_Block) {
-    cout << "Message block contents " << endl;
-    printIntegerArray(shaContext.Message_Block, SHA256_Message_Block_Size, MESSAGE_BLOCK_BITS);
-  }
-}
 
 /* * * * * * * * * *
  *  T E S T I N G  *
