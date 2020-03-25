@@ -118,20 +118,24 @@ Integer HMAC_Reset(EMP_HMAC_Context *context, Integer* key, int key_len)
   context->Computed = Integer(INT_BITS, 0, PUBLIC);
   context->Corrupted = Integer(INT_BITS, shaSuccess, PUBLIC);
 
+
+  EMP_SHA256_CONTEXT shaContext;
+  SHA256_Reset(&shaContext);
+
   /*
    * If key is longer than the hash blocksize,
    * reset it to key = HASH(key).
    */
   if (key_len > SHA256_Message_Block_Size) {
-    EMP_SHA256_CONTEXT tcontext;
-    SHA256_Reset(&tcontext);
-    SHA256_Input(&tcontext, key, key_len);
-    SHA256_Result(&tcontext, tempKey);
+    SHA256_Input(&shaContext, key, key_len);
+    SHA256_Result(&shaContext, tempKey);
     // if (err != shaSuccess) return err;
 
     key = tempKey;
     key_len = SHA256HashSize;
   }
+
+  context->shaContext = shaContext;
   int i;
   for (i = 0; i < key_len; i++) {
     k_ipad[i] = key[i] ^ Integer(BYTE_BITS, 0x36, PUBLIC);
