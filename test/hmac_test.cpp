@@ -51,30 +51,31 @@ static int Msg_Block = 1;
 static int Msg_Block_Index = 2;
 static int Msg_Intermediate_Hash = 4;
 
-void printContext(EMP_SHA256_CONTEXT *context, int flag, string debugMsg) {
+void printContext(EMP_HMAC_Context *context, int flag, string debugMsg) {
   cout << debugMsg << endl;
+  EMP_SHA256_CONTEXT shaContext = context->shaContext;
   if (flag == ALL || flag == Msg_Intermediate_Hash) {
     cout << "Interemdiate Hash " << endl;
-    printIntegerArray(context->Intermediate_Hash, INTERMEDIATE_HASH_LEN, 32);
+    printIntegerArray(shaContext.Intermediate_Hash, INTERMEDIATE_HASH_LEN, 32);
   }
   if (flag == ALL) {
     cout << "Length high " << endl;
-    printInteger(context->Length_High, LENGTH_BITS);
+    printInteger(shaContext.Length_High, LENGTH_BITS);
     cout << endl;
   }
   if (flag == ALL) {
     cout << "Length low " << endl;
-    printInteger(context->Length_Low, LENGTH_BITS);
+    printInteger(shaContext.Length_Low, LENGTH_BITS);
     cout << endl;
   }  
   if (flag == ALL || flag == Msg_Block_Index) { 
     cout << "Message block index " << endl;
-    printInteger(context->Message_Block_Index, MESSAGE_BLOCK_INDEX_BITS);
+    printInteger(shaContext.Message_Block_Index, MESSAGE_BLOCK_INDEX_BITS);
     cout << endl;
   }
   if (flag == ALL || flag == Msg_Block) {
     cout << "Message block contents " << endl;
-    printIntegerArray(context->Message_Block, SHA256_Message_Block_Size, MESSAGE_BLOCK_BITS);
+    printIntegerArray(shaContext.Message_Block, SHA256_Message_Block_Size, MESSAGE_BLOCK_BITS);
   }
 }
 
@@ -132,10 +133,13 @@ void runHmac(char* message, int message_length, char* key, int key_length) {
   Integer* digest = digest_buf;
   EMP_HMAC_Context context;
   HMAC_Reset(&context, intKey, key_length);
+  cout << "After reset!" << endl;
+  printContext(&context, ALL, "input");
   HMAC_Input(&context, intMsg, message_length);
+  cout << "After input" << endl;
+  printContext(&context, ALL, "input");
   HMAC_Result(&context, digest);
   printHash(digest);
-  // printIntegerArray(digest, SHA256HashSize, 8);
 
   cout << "KEY: " << key << endl;
   cout << "MSG: " << message << endl;
