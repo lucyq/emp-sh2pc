@@ -175,22 +175,28 @@ Integer HMAC_Result(EMP_HMAC_Context *context, Integer* digest)
 
   /* finish up 1st pass */
   /* (Use digest here as a temporary buffer.) */
-  Integer ret =
-         SHA256_Result(&context->shaContext, digest) |
+  // Integer ret =
+         SHA256_Result(&context->shaContext, digest);
+         printContext(context, 0, "DEBUG 1");
          /* perform outer SHA */
          /* init context for 2nd pass */
-         SHA256_Reset(&context->shaContext) |
+         SHA256_Reset(&context->shaContext);
+
+         printContext(context, 0, "DEBUG 2");
 
          /* start with outer pad */
-         SHA256_Input(&context->shaContext, context->k_opad, SHA256_Message_Block_Size) |
+         SHA256_Input(&context->shaContext, context->k_opad, SHA256_Message_Block_Size);
+                 printContext(context, 0, "DEBUG 3");
 
          /* then results of 1st hash */
-         SHA256_Input(&context->shaContext, digest, SHA256HashSize) |
+         SHA256_Input(&context->shaContext, digest, SHA256HashSize);
          /* finish up 2nd pass */
+                  printContext(context, 0, "DEBUG 4");
          SHA256_Result(&context->shaContext, digest);
+         printContext(context, 0, "DEBUG 5");
 
   context->Computed = Integer(INT_BITS, 1, PUBLIC);
-  return context->Corrupted = ret;
+  return context->Corrupted = context->Computed;
 }
 
 
