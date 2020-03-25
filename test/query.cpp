@@ -88,6 +88,8 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Reset(&context, key, key_length);
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
+  cout << "DIGEST!!!\n";
+  printIntegerArray(digest, 32, 8);
 
   Integer* digest_ptr = new Integer(); 
   digest_ptr = digest;
