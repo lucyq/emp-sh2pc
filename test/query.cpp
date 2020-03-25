@@ -195,6 +195,11 @@ int main(int argc, char** argv) {
   char* r_hex = argv[5];
   char* rprime_hex = argv[6];
 
+  if (argc != 6) {
+    cout << "Not enough args: [party] [port] [key share] [query share] [r share] [r' share]\n";
+    return 0;
+  }
+
 
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
@@ -202,6 +207,7 @@ int main(int argc, char** argv) {
  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
+
 
   testQuery1();  
   cout << "PASSED" << endl;

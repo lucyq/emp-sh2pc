@@ -16,14 +16,6 @@ enum {
   SN_LENGTH = 12, CID_LENGTH = 4, DATA_LENGTH = 16, // data = sn + cid
   KEY_LENGTH = 32, RANDOM_LENGTH = 96, RPRIME_LENGTH = 32, TOKEN_LENGTH = 1
 };
-// static int SN_LENGTH = 12; 
-// static int CID_LENGTH = 4;
-// static int DATA_LENGTH = SN_LENGTH + CID_LENGTH;
-// static int KEY_LENGTH = 32; 
-// static int RANDOM_LENGTH = 96; 
-// static int RPRIME_LENGTH = 32;
-// static int TOKEN_LENGTH = 1;
-
 
 void printarray(char* array, int ARRAY_LENGTH) {
     for (int i = 0; i <ARRAY_LENGTH; i ++) {
@@ -91,20 +83,13 @@ void printSSLHash(uint8_t* sslHash, int arraySize) {
 
 bool compareHash(uint8_t* sslHash, Integer* empHash) {
   for (int i =0; i < SHA256HashSize; i++) {
-
-    //cout << "enters here? :" << i << endl;
-    //cout << "HASH SIZE :" << SHA256HashSize << endl;
     bitset<8> sslBitset(sslHash[i]);
     for (int j = 7; j >= 0; j--) {
-      //cout << "j equals :" << j << endl;
-      //cout << empHash[i][j].reveal() << endl;
-      //cout << sslBitset[j] << endl;
       if(empHash[i][j].reveal() != sslBitset[j]) {
         cout << endl << "FALSE" << endl;
         return false;
       }
     }
-    //cout <<  sslBitset << ", ";
   }
   cout << endl << "TRUE" << endl;
   return true;
@@ -114,8 +99,6 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   static Integer digest_buf[SHA256HashSize];
   Integer* digest = digest_buf;
   EMP_HMAC_Context context;
-  // HMAC_Reset(&context, intKey, key_length);
-  // HMAC_Input(&context, intMsg, message_length);
   HMAC_Reset(&context, key, key_length);
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
@@ -290,11 +273,8 @@ void testUpdate1() {
   char* data = (char*)"KKEyW9gWPnA7XvT3";
   char* random = (char*)"nXnqtkTMXn2dUnpjtxw6FAd57W2PUqzbKb87mu5hqYj8CWnkw7d2kEasP6fp8BC3Dgn28YBGdU3bMWpVACBc6TavzM8CZtVQ";
   char* rprimes = (char*)"WWmAfsr3ZKSA7u9JgSfcW3MGyfJEHEsq";
-  //Integer* k = convertStringtoIntegerArray(key, KEY_LENGTH); 
-  //Integer* p = convertStringtoIntegerArray(data, DATA_LENGTH); 
-  //Integer* r = convertStringtoIntegerArray(random, RANDOM_LENGTH); 
-  //Integer* rprime = convertStringtoIntegerArray(rprimes, RPRIME_LENGTH); 
-  static Integer k[KEY_LENGTH];
+ 
+   static Integer k[KEY_LENGTH];
   static Integer p[DATA_LENGTH]; 
   static Integer r[RANDOM_LENGTH];
   static Integer rprime[RPRIME_LENGTH];
@@ -314,11 +294,7 @@ void testUpdate1() {
 
   char* utk1 = find_utk(key,data,random,rprimes);
 
-  //cout << "gets to utk2" << endl;
   Integer* utk2 = find_secure_utk(k,p,r,rprime); 
-
-  //cout << "printing utk1" << endl;
-  //printarray(utk1,96);
 
   assert(compareUtk(utk1,utk2) == true);
 }
@@ -328,10 +304,7 @@ void testUpdate2() {
   char* data = (char*)"JtUJnhbF7wk7LRge";
   char* random = (char*)"X6skaVtAQMB8qBV7HV5pbh9f926WKKPd9aWwc9FAwrsV7ed8gsqwDpG7uVYp5pwrL7yDDfNyAJJmEfFaKC3AGLCACEZ4gYRw";
   char* rprimes = (char*)"JpVwaSp24MFRLdvReF3y7D5YRFsWXxdh";
-  //Integer* k = convertStringtoIntegerArray(key, KEY_LENGTH); 
-  //Integer* p = convertStringtoIntegerArray(data, DATA_LENGTH); 
-  //Integer* r = convertStringtoIntegerArray(random, RANDOM_LENGTH); 
-  //Integer* rprime = convertStringtoIntegerArray(rprimes, RPRIME_LENGTH); 
+ 
   static Integer k[KEY_LENGTH];
   static Integer p[DATA_LENGTH]; 
   static Integer r[RANDOM_LENGTH];
@@ -352,11 +325,7 @@ void testUpdate2() {
 
   char* utk1 = find_utk(key,data,random,rprimes);
 
-  //cout << "gets to utk2" << endl;
   Integer* utk2 = find_secure_utk(k,p,r,rprime); 
-
-  //cout << "printing utk1" << endl;
-  //printarray(utk1,96);
 
   assert(compareUtk(utk1,utk2) == true);
 }
@@ -380,13 +349,6 @@ int main(int argc, char** argv) {
   char* p_hex = argv[4];
   char* r_hex = argv[5];
   char* rprime_hex = argv[6];
-  //string hello = "1112131415161718";
-  //char* test = (char*)hello.c_str();
-  //unsigned char output[8];
-  //printarray(test, 8); 
-  //convertHexToChar(test,output,8); 
-
-
 
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
@@ -395,8 +357,8 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  //testUpdate1();  
-  //testUpdate2();
+  testUpdate1();  
+  testUpdate2();
 
   cout << "begin actual 2pc" << endl;
   char* k_share = k_share_hex;
@@ -415,7 +377,6 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
   for (int i = 0; i < DATA_LENGTH; i++) {
     p_reconstruct[i] = Integer(8, p[i], PUBLIC);
