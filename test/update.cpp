@@ -102,7 +102,7 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Reset(&context, key, key_length);
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
-  printHash(digest);
+  // printHash(digest);
 
   Integer* digest_ptr = new Integer(); 
   digest_ptr = digest;
@@ -296,6 +296,10 @@ void testUpdate1() {
 
   Integer* utk2 = find_secure_utk(k,p,r,rprime); 
 
+  cout << "UTK\n";
+  printIntegerArray(utk2, 96, 8);
+  // print utk2
+  // assert(utk2, "");
   assert(compareUtk(utk1,utk2) == true);
 }
 
@@ -375,11 +379,20 @@ int main(int argc, char** argv) {
   static Integer r_reconstruct[RANDOM_LENGTH];
   static Integer rprime_reconstruct[RPRIME_LENGTH];
 
+  cout << "PRINT K SHARE\n";
+
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
+    printInteger(Integer(8, k_share[i],PUBLIC), 8);
+    cout << ",";
   }
+
+  cout << "\nPRINT P SHARE\n";
+
   for (int i = 0; i < DATA_LENGTH; i++) {
     p_reconstruct[i] = Integer(8, p[i], PUBLIC);
+    printInteger(Integer(8, p[i],PUBLIC), 8);
+    cout << ",";
   }
   for (int i = 0; i < RANDOM_LENGTH; i++) {
     r_reconstruct[i] = Integer(8, r[i], PUBLIC);
@@ -401,7 +414,17 @@ int main(int argc, char** argv) {
 
   // Calculate the token
 
+  cout << "KEY!!!\n";
+  printIntegerArray(k_reconstruct, KEY_LENGTH,8);
+
+  cout << "P!!!\n";
+  printIntegerArray(p_reconstruct, DATA_LENGTH,8);
+
+
   Integer* utk = find_secure_utk(k_reconstruct_ptr,p_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
+  
+  cout << "UUUUTK!\n";
+  printIntegerArray(utk, 96, 8);
 
   // shard it in half 
   Integer o1[96]; 
@@ -414,7 +437,7 @@ int main(int argc, char** argv) {
 
   cout << "Party 1 Output:";
   for (int i = 0; i < 96; i++) {
-    for (int j = 0; j < 8; j++) {
+    for (int j = BYTE_BITS-1; j >= 0; j--) {
       cout << o1[i][j].reveal(ALICE);
     }
     cout << ",";
@@ -424,7 +447,7 @@ int main(int argc, char** argv) {
 
   cout << "Party 2 Output: ";
   for (int i = 0; i < 96; i++) {
-    for (int j = 0; j < 8; j++) {
+    for (int j = BYTE_BITS-1; j >= 0; j--) {
       cout << r_reconstruct[i][j].reveal(BOB);
     }
     cout << ",";

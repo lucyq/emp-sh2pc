@@ -28,15 +28,15 @@ void printarray(char* array, int ARRAY_LENGTH) {
 }
 
 
-void printHash(Integer* Message_Digest) {
-  cout << "Printing output hash: " << endl;
-  for (int i =0; i < SHA256HashSize; i++) {
-    for (int j =7; j >= 0; j--) {
-      cout << Message_Digest[i][j].reveal();
-    }
-  }
-  cout << endl;
-}
+// void printHash(Integer* Message_Digest) {
+//   cout << "Printing output hash: " << endl;
+//   for (int i =0; i < SHA256HashSize; i++) {
+//     for (int j =7; j >= 0; j--) {
+//       cout << Message_Digest[i][j].reveal();
+//     }
+//   }
+//   cout << endl;
+// }
 
 bool compareTokens(char* expected, Integer* actual) {
   for (int i = 0; i < 2*KEY_LENGTH; i++) {
@@ -173,6 +173,10 @@ void testQuery1() {
 
   char* tokens1 = find_tokens(key,data,random,rprimes);
   Integer* tokens2 = generate_secure_tokens(k,q,r,rprime); 
+
+  // print tokens2 
+  cout << "TOKENS\n";
+  printIntegerArray(tokens2, 64, 8); 
   assert(compareTokens(tokens1,tokens2) == true);
 }
 
@@ -195,10 +199,10 @@ int main(int argc, char** argv) {
   char* r_hex = argv[5];
   char* rprime_hex = argv[6];
 
-  if (argc != 6) {
-    cout << "Not enough args: [party] [port] [key share] [query share] [r share] [r' share]\n";
-    return 0;
-  }
+  // if (argc != 6) {
+  //   cout << "Not enough args: [party] [port] [key share] [query share] [r share] [r' share]\n";
+  //   return 0;
+  // }
 
 
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
@@ -232,6 +236,8 @@ int main(int argc, char** argv) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
     //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
+
+  cout << "KEY!!!\n";
   printIntegerArray(k_reconstruct, KEY_LENGTH,8);
 
   for (int i = 0; i < SN_LENGTH; i++) {
@@ -254,18 +260,26 @@ int main(int argc, char** argv) {
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
+
+  cout << "KEYYYY\n";
+  printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
+  cout << "Q!!!\n";
+  printIntegerArray(q_reconstruct, SN_LENGTH,8);
+
+
   Integer* k_reconstruct_ptr = k_reconstruct; 
   Integer* q_reconstruct_ptr = q_reconstruct; 
   Integer* r_reconstruct_ptr = r_reconstruct; 
   Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
-
-  printIntegerArray(k_reconstruct_ptr, KEY_LENGTH,8);
 
   // Calculate the token
 
   Integer* tokens = generate_secure_tokens(k_reconstruct_ptr,q_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
   Integer tokensA[KEY_LENGTH * 2];
   Integer tokensB[KEY_LENGTH * 2];
+
+// cout << "TOKENS!!\n";
+//   printIntegerArray(tokens, KEY_LENGTH*2,8);
 
   for (int i = 0; i < KEY_LENGTH; i++) {
     tokensA[i] = tokens[i] ^ r_reconstruct[i];
@@ -283,7 +297,7 @@ int main(int argc, char** argv) {
 
   cout << "Party 1 Output:";
   for (int i = 0; i < KEY_LENGTH * 2; i++) {
-    for (int j = 0; j < 8; j++) {
+    for (int j = BYTE_BITS-1; j >= 0; j--) {
       cout << tokensA[i][j].reveal(ALICE);
     }
     cout << ",";
@@ -292,7 +306,7 @@ int main(int argc, char** argv) {
 
   cout << "Party 2 Output:";
   for (int i = 0; i < KEY_LENGTH * 2; i++) {
-    for (int j = 0; j < 8; j++) {
+    for (int j = BYTE_BITS-1; j >= 0; j--) {
       cout << tokensB[i][j].reveal(BOB);
     }
     cout << ",";
