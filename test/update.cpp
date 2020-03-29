@@ -295,6 +295,10 @@ void testUpdate1() {
 
   Integer* utk2 = find_secure_utk(k,p,r,rprime); 
 
+  cout << "UTK\n";
+  printIntegerArray(utk2, 96, 8);
+  // print utk2
+  // assert(utk2, "");
   assert(compareUtk(utk1,utk2) == true);
 }
 
@@ -374,12 +378,18 @@ int main(int argc, char** argv) {
   static Integer r_reconstruct[RANDOM_LENGTH];
   static Integer rprime_reconstruct[RPRIME_LENGTH];
 
+  cout << "PRINT K SHARE\n";
+
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
+    printInteger(Integer(8, k_share[i],PUBLIC), 8);
+    cout << ",";
   }
 
   for (int i = 0; i < DATA_LENGTH; i++) {
     p_reconstruct[i] = Integer(8, p[i], PUBLIC);
+    printInteger(Integer(8, p[i],PUBLIC), 8);
+    cout << ",";
   }
   for (int i = 0; i < RANDOM_LENGTH; i++) {
     r_reconstruct[i] = Integer(8, r[i], PUBLIC);
@@ -400,7 +410,6 @@ int main(int argc, char** argv) {
   Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
 
   Integer* utk = find_secure_utk(k_reconstruct_ptr,p_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
-
 
   // shard it in half 
   Integer o1[96]; 

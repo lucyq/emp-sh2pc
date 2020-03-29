@@ -163,7 +163,6 @@ void testQuery1() {
   char* tokens1 = find_tokens(key,data,random,rprimes);
   Integer* tokens2 = generate_secure_tokens(k,q,r,rprime); 
 
-
   assert(compareTokens(tokens1,tokens2) == true);
 }
 
@@ -237,6 +236,13 @@ int main(int argc, char** argv) {
   xor_reconstruct(q,q,SN_LENGTH, q_reconstruct); 
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
+
+
+  cout << "KEYYYY\n";
+  printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
+  cout << "Q!!!\n";
+  printIntegerArray(q_reconstruct, SN_LENGTH,8);
+
 
   Integer* k_reconstruct_ptr = k_reconstruct; 
   Integer* q_reconstruct_ptr = q_reconstruct; 
