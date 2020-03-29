@@ -102,7 +102,6 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Reset(&context, key, key_length);
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
-  // printHash(digest);
 
   Integer* digest_ptr = new Integer(); 
   digest_ptr = digest;
@@ -398,9 +397,6 @@ int main(int argc, char** argv) {
     //printInteger(Integer(8, k_share[i],PUBLIC), 8);
     cout << ",";
   }
-
-  //cout << "\nPRINT P SHARE\n";
-
   for (int i = 0; i < DATA_LENGTH; i++) {
     p_reconstruct[i] = Integer(8, p[i], PUBLIC);
     //printInteger(Integer(8, p[i],PUBLIC), 8);
@@ -425,19 +421,7 @@ int main(int argc, char** argv) {
   Integer* r_reconstruct_ptr = r_reconstruct; 
   Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
 
-  // Calculate the token
-
-  cout << "KEY!!!\n";
-  printIntegerArray(k_reconstruct, KEY_LENGTH,8);
-
-  cout << "P!!!\n";
-  printIntegerArray(p_reconstruct, DATA_LENGTH,8);
-
-
   Integer* utk = find_secure_utk(k_reconstruct_ptr,p_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
-  
-  cout << "UUUUTK!\n";
-  printIntegerArray(utk, 96, 8);
 
   // shard it in half 
   Integer o1[96]; 
