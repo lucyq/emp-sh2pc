@@ -34,7 +34,8 @@ static int Msg_Block = 1;
 static int Msg_Block_Index = 2;
 static int Msg_Intermediate_Hash = 4;
 void printInteger(Integer intToPrint, int bitSize) {
-  for (int i = bitSize -1; i >= 0; i--) {
+
+  for (int i = bitSize - 1; i >= 0; i--) {
     cout << intToPrint[i].reveal();
   }
   return;
