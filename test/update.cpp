@@ -246,8 +246,9 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
 
   Integer* value_key = runHmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1);
   Integer* hmac_key = runHmac(value_key,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
-
-  //xor padded cid with hmac_key 
+  //cout << "FIRST HMAC INPUTS" << endl;
+  //printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  //printIntegerArray(sn2,SN_LENGTH+1,8);
   Integer ciphertext[32];
   for (int i = 0; i < 32; i++) {
     ciphertext[i] = hmac_key[i] ^ cid[i];
@@ -334,15 +335,26 @@ void testUpdate2() {
   assert(compareUtk(utk1,utk2) == true);
 }
 
-void convertHexToChar(char* hex, char* output, int output_length) {
-  for (int i = 0; i < output_length; i++) {
-    char c[2]; 
-    c[0] = hex[2*i];
-    c[1] = hex[2*i+1];
-    int number = (int) strtol(c,NULL,16);
-    output[i] = (char)number;
-  }
-}
+void convertHexToChar(char* hexChar, char* output, int ARRAY_LENGTH) { 
+    // initialize the ASCII code string as empty. 
+    string hex(hexChar);
+
+    //static char tmp[96];
+    //char* tmp2 = tmp; 
+    for (size_t i = 0; i < hex.length(); i += 2) 
+    { 
+        // extract two characters from hex string 
+        string part = hex.substr(i, 2); 
+  
+        // change it into base 16 and  
+        // typecast as the character 
+        char ch = stoul(part, nullptr, 16); 
+  
+        // add this char to final ASCII string 
+        output[i/2] = ch;
+    } 
+} 
+
 
 int main(int argc, char** argv) {
 
@@ -361,8 +373,8 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  testUpdate1();  
-  testUpdate2();
+  //testUpdate1();  
+  //testUpdate2();
 
   cout << "begin actual 2pc" << endl;
   char* k_share = k_share_hex;
@@ -379,19 +391,19 @@ int main(int argc, char** argv) {
   static Integer r_reconstruct[RANDOM_LENGTH];
   static Integer rprime_reconstruct[RPRIME_LENGTH];
 
-  cout << "PRINT K SHARE\n";
+  //cout << "PRINT K SHARE\n";
 
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    printInteger(Integer(8, k_share[i],PUBLIC), 8);
+    //printInteger(Integer(8, k_share[i],PUBLIC), 8);
     cout << ",";
   }
 
-  cout << "\nPRINT P SHARE\n";
+  //cout << "\nPRINT P SHARE\n";
 
   for (int i = 0; i < DATA_LENGTH; i++) {
     p_reconstruct[i] = Integer(8, p[i], PUBLIC);
-    printInteger(Integer(8, p[i],PUBLIC), 8);
+    //printInteger(Integer(8, p[i],PUBLIC), 8);
     cout << ",";
   }
   for (int i = 0; i < RANDOM_LENGTH; i++) {
@@ -401,6 +413,7 @@ int main(int argc, char** argv) {
     rprime_reconstruct[i] = Integer(8, r[i], PUBLIC);
   }
 
+  printIntegerArray(rprime_reconstruct,RPRIME_LENGTH,8);
   // reconstructing everything between Alice and Bob 
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
   xor_reconstruct(p,p,DATA_LENGTH, p_reconstruct); 

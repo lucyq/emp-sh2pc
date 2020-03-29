@@ -139,6 +139,9 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
   }
 
   Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
+  cout << "TK2 VALUES" << endl; 
+  printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
+  printIntegerArray(sn2, SN_LENGTH + 1, 8);
 
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[KEY_LENGTH + i] = tk2[i];
@@ -180,15 +183,25 @@ void testQuery1() {
   assert(compareTokens(tokens1,tokens2) == true);
 }
 
-void convertHexToChar(char* hex, char* output, int output_length) {
-  for (int i = 0; i < output_length; i++) {
-    char c[2]; 
-    c[0] = hex[2*i];
-    c[1] = hex[2*i+1];
-    int number = (int) strtol(c,NULL,16);
-    output[i] = (char)number;
-  }
-}
+void convertHexToChar(char* hexChar, char* output, int ARRAY_LENGTH) { 
+    // initialize the ASCII code string as empty. 
+    string hex(hexChar);
+
+    //static char tmp[96];
+    //char* tmp2 = tmp; 
+    for (size_t i = 0; i < hex.length(); i += 2) 
+    { 
+        // extract two characters from hex string 
+        string part = hex.substr(i, 2); 
+  
+        // change it into base 16 and  
+        // typecast as the character 
+        char ch = stoul(part, nullptr, 16); 
+  
+        // add this char to final ASCII string 
+        output[i/2] = ch;
+    } 
+} 
 
 int main(int argc, char** argv) {
   int port, party;
@@ -213,8 +226,8 @@ int main(int argc, char** argv) {
   setup_semi_honest(io, party);
 
 
-  testQuery1();  
-  cout << "PASSED" << endl;
+  //testQuery1();  
+  //cout << "PASSED" << endl;
 
   cout << "begin query 2pc" << endl;
 
@@ -243,6 +256,8 @@ int main(int argc, char** argv) {
   for (int i = 0; i < SN_LENGTH; i++) {
     q_reconstruct[i] = Integer(8, q[i], PUBLIC);
   }
+  cout << "Q RECONSTRUCT" << endl;
+  printIntegerArray(q_reconstruct, SN_LENGTH, 8);
 
   for (int i = 0; i < RANDOM_LENGTH; i++) {
     r_reconstruct[i] = Integer(8, r[i], PUBLIC);
