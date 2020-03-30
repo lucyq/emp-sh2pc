@@ -245,9 +245,11 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
 
   Integer* value_key = runHmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1);
   Integer* hmac_key = runHmac(value_key,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
-  //cout << "FIRST HMAC INPUTS" << endl;
-  //printIntegerArray(k_reconstruct,KEY_LENGTH,8);
-  //printIntegerArray(sn2,SN_LENGTH+1,8);
+  cout << "FIRST HMAC INPUTS" << endl;
+  printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  printIntegerArray(sn2,SN_LENGTH+1,8);
+  cout << "HMAC VALUE" << endl; 
+  printIntegerArray(value_key,32,8);
   Integer ciphertext[32];
   for (int i = 0; i < 32; i++) {
     ciphertext[i] = hmac_key[i] ^ cid[i];
@@ -394,13 +396,9 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    //printInteger(Integer(8, k_share[i],PUBLIC), 8);
-    cout << ",";
   }
   for (int i = 0; i < DATA_LENGTH; i++) {
     p_reconstruct[i] = Integer(8, p[i], PUBLIC);
-    //printInteger(Integer(8, p[i],PUBLIC), 8);
-    cout << ",";
   }
   for (int i = 0; i < RANDOM_LENGTH; i++) {
     r_reconstruct[i] = Integer(8, r[i], PUBLIC);
@@ -409,12 +407,15 @@ int main(int argc, char** argv) {
     rprime_reconstruct[i] = Integer(8, r[i], PUBLIC);
   }
 
-  printIntegerArray(rprime_reconstruct,RPRIME_LENGTH,8);
   // reconstructing everything between Alice and Bob 
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
   xor_reconstruct(p,p,DATA_LENGTH, p_reconstruct); 
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
+
+  cout << "P SHARE" << endl;
+  printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  printIntegerArray(p_reconstruct,DATA_LENGTH,8);
 
   Integer* k_reconstruct_ptr = k_reconstruct; 
   Integer* p_reconstruct_ptr = p_reconstruct; 

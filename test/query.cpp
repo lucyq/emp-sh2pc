@@ -16,6 +16,19 @@ enum {
   SN_LENGTH = 12, KEY_LENGTH = 32, RANDOM_LENGTH = 32, RPRIME_LENGTH = 32, TOKEN_LENGTH = 1
 };
 
+void print_uint8_t(uint8_t n) {
+  bitset<8> x(n);
+  cout << x;
+}
+
+void printSSLHash(uint8_t* sslHash, int arraySize) {
+  for(int i = 0; i < arraySize; i++) {
+    print_uint8_t(sslHash[i]);
+    cout << ", ";
+  }
+  cout << endl;
+  return;
+}
 
 void printarray(char* array, int ARRAY_LENGTH) {
     for (int i = 0; i <ARRAY_LENGTH; i ++) {
@@ -63,6 +76,7 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Reset(&context, key, key_length);
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
+
   Integer* digest_ptr = new Integer(); 
   digest_ptr = digest;
 
@@ -131,6 +145,7 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
   cout << "TK2 VALUES" << endl; 
   printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
   printIntegerArray(sn2, SN_LENGTH + 1, 8);
+  printIntegerArray(tk2, KEY_LENGTH, 8);
 
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[KEY_LENGTH + i] = tk2[i];
@@ -227,14 +242,11 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
 
   for (int i = 0; i < SN_LENGTH; i++) {
     q_reconstruct[i] = Integer(8, q[i], PUBLIC);
   }
-  cout << "Q RECONSTRUCT" << endl;
-  printIntegerArray(q_reconstruct, SN_LENGTH, 8);
 
   for (int i = 0; i < RANDOM_LENGTH; i++) {
     r_reconstruct[i] = Integer(8, r[i], PUBLIC);
@@ -244,14 +256,14 @@ int main(int argc, char** argv) {
     rprime_reconstruct[i] = Integer(8, rprime[i], PUBLIC);
   }
 
-  // printIntegerArray(k_reconstruct, KEY_LENGTH,8);
+  printIntegerArray(k_reconstruct, KEY_LENGTH,8);
+  printIntegerArray(q_reconstruct,SN_LENGTH,8);
 
   // reconstructing everything between Alice and Bob 
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
   xor_reconstruct(q,q,SN_LENGTH, q_reconstruct); 
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
-
 
   cout << "KEYYYY\n";
   printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
