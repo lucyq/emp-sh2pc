@@ -74,7 +74,7 @@ bool compareHash(uint8_t* sslHash, Integer* empHash) {
   return true;
 }
 
-void runHmac(char* message, int message_length, char* key, int key_length) {
+void runHmac(char* key, int key_length, char* message, int message_length) {
   /* HMAC test */
   Integer intMsg[message_length];
   for (int i = 0; i < message_length; i++) {
@@ -88,15 +88,8 @@ void runHmac(char* message, int message_length, char* key, int key_length) {
   Integer* digest = digest_buf;
   EMP_HMAC_Context context;
   HMAC_Reset(&context, intKey, key_length);
- 
   HMAC_Input(&context, intMsg, message_length);
-  cout << "After input" << endl;
-  printContext(&context, ALL, "input");
   HMAC_Result(&context, digest);
-  cout << "After result" << endl;
-  printContext(&context, ALL, "result");
- 
- 
   printHash(digest);
 
   cout << "KEY: " << key << endl;
@@ -117,8 +110,14 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  runHmac((char*) "72d68d8c2f6ecea8c6b058afe4e02a7a", 32, (char*) "a16807475cbdbea195e61de194c154da", 32);
+
+  uint8_t input[32] = {160,63,168,3,24,196,213,57,219,176,234,228,150,246,213,122,155,8,235,64,87,68,165,27,236,231,97,40,168,61,140,81};
+  uint8_t key[32] = {213,16,44,134,80,192,163,23,109,217,5,219,93,168,89,198,62,236,212,183,126,180,44,84,228,165,196,238,109,58,61,10};
+
+  runHmac((char*)(key), 32, (char*)(input), 32);
 
   delete io;
   return 0;
 }
+
+
