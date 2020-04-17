@@ -77,8 +77,7 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
 
-  Integer* digest_ptr = new Integer(); 
-  digest_ptr = digest;
+  Integer* digest_ptr = digest;
 
   return digest_ptr;
 }
@@ -142,10 +141,6 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
   }
 
   Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
-  cout << "TK2 VALUES" << endl; 
-  printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
-  printIntegerArray(sn2, SN_LENGTH + 1, 8);
-  printIntegerArray(tk2, KEY_LENGTH, 8);
 
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[KEY_LENGTH + i] = tk2[i];
@@ -256,19 +251,16 @@ int main(int argc, char** argv) {
     rprime_reconstruct[i] = Integer(8, rprime[i], PUBLIC);
   }
 
-  printIntegerArray(k_reconstruct, KEY_LENGTH,8);
-  printIntegerArray(q_reconstruct,SN_LENGTH,8);
-
   // reconstructing everything between Alice and Bob 
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
   xor_reconstruct(q,q,SN_LENGTH, q_reconstruct); 
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
-  cout << "KEYYYY\n";
-  printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
-  cout << "Q!!!\n";
-  printIntegerArray(q_reconstruct, SN_LENGTH,8);
+  // cout << "KEYYYY\n";
+  // printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
+  // cout << "Q!!!\n";
+  // printIntegerArray(q_reconstruct, SN_LENGTH,8);
 
 
   Integer* k_reconstruct_ptr = k_reconstruct; 

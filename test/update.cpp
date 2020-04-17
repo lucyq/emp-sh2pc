@@ -103,10 +103,7 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
 
-  Integer* digest_ptr = new Integer(); 
-  digest_ptr = digest;
-
-  return digest_ptr;
+  return digest;
 }
 
 
@@ -211,7 +208,6 @@ char* find_utk(char* k_reconstruct, char* p_reconstruct, char* r_reconstruct, ch
 }
 
 Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer* r_reconstruct, Integer* rprime_reconstruct) {
-
   Integer sn1[SN_LENGTH + 1];
   Integer sn2[SN_LENGTH + 1];
   Integer cid[32];
@@ -235,8 +231,10 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
 
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
   Integer* label = runHmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
-  //cout << "PRINT LABEL OUTPUT" << endl;
-  //printIntegerArray(label,KEY_LENGTH,8);
+  cout << "LABEL KEY" << endl; 
+  printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  printIntegerArray(sn1,SN_LENGTH+1,8);
+  printIntegerArray(label_key,KEY_LENGTH,8);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
@@ -244,12 +242,17 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   }
 
   Integer* value_key = runHmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1);
-  Integer* hmac_key = runHmac(value_key,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
+  Integer tmp[KEY_LENGTH]; 
+  for (int i = 0;  i < KEY_LENGTH ; i++) {
+    tmp[i] = value_key[i]; 
+  }
+  printIntegerArray(tmp,KEY_LENGTH,8);
+  Integer* hmac_key = runHmac(tmp,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
   cout << "FIRST HMAC INPUTS" << endl;
   printIntegerArray(k_reconstruct,KEY_LENGTH,8);
   printIntegerArray(sn2,SN_LENGTH+1,8);
   cout << "HMAC VALUE" << endl; 
-  printIntegerArray(value_key,32,8);
+  printIntegerArray(tmp,32,8);
   Integer ciphertext[32];
   for (int i = 0; i < 32; i++) {
     ciphertext[i] = hmac_key[i] ^ cid[i];
@@ -413,9 +416,9 @@ int main(int argc, char** argv) {
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
-  cout << "P SHARE" << endl;
-  printIntegerArray(k_reconstruct,KEY_LENGTH,8);
-  printIntegerArray(p_reconstruct,DATA_LENGTH,8);
+  // cout << "P SHARE" << endl;
+  // printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  // printIntegerArray(p_reconstruct,DATA_LENGTH,8);
 
   Integer* k_reconstruct_ptr = k_reconstruct; 
   Integer* p_reconstruct_ptr = p_reconstruct; 
