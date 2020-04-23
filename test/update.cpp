@@ -230,15 +230,15 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  Integer* label = runHmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
+  //Integer* label = runHmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
   cout << "LABEL KEY" << endl; 
-  printIntegerArray(k_reconstruct,KEY_LENGTH,8);
-  printIntegerArray(sn1,SN_LENGTH+1,8);
+  //printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  //printIntegerArray(sn1,SN_LENGTH+1,8);
   printIntegerArray(label_key,KEY_LENGTH,8);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
-    utk[i] = label[i];
+    utk[i] = label_key[i];
   }
 
   Integer* value_key = runHmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1);
@@ -248,11 +248,11 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   }
   printIntegerArray(tmp,KEY_LENGTH,8);
   Integer* hmac_key = runHmac(tmp,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
-  cout << "FIRST HMAC INPUTS" << endl;
-  printIntegerArray(k_reconstruct,KEY_LENGTH,8);
-  printIntegerArray(sn2,SN_LENGTH+1,8);
-  cout << "HMAC VALUE" << endl; 
-  printIntegerArray(tmp,32,8);
+  //cout << "FIRST HMAC INPUTS" << endl;
+  //printIntegerArray(k_reconstruct,KEY_LENGTH,8);
+  //printIntegerArray(sn2,SN_LENGTH+1,8);
+  //cout << "HMAC VALUE" << endl; 
+  //printIntegerArray(tmp,32,8);
   Integer ciphertext[32];
   for (int i = 0; i < 32; i++) {
     ciphertext[i] = hmac_key[i] ^ cid[i];

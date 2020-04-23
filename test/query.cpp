@@ -135,9 +135,9 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
   ctr[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
+  //Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
   for (int i = 0; i < KEY_LENGTH; i++) {
-  	tokens[i] = tk1[i];
+  	tokens[i] = label_key[i];
   }
 
   Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
