@@ -208,9 +208,8 @@ int main(int argc, char** argv) {
   char* r_hex = argv[5];
   char* rprime_hex = argv[6];
 
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
-  // NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.158", port); // Lucy
+// NetIO * io = new NetIO(party==ALICE ? nullptr : "18.221.224.217", port); // aws
+// NetIO * io = new NetIO(party==ALICE ? nullptr : "34.70.234.217", port); // gcloud
  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);

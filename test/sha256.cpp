@@ -401,124 +401,28 @@ void computeDoubleSHA256_5d(Integer message[5][16], Integer result[8]) {
   computeSHA256_1d(newmessage, result);
 }
 
+void printInteger(Integer intToPrint, int bitSize) {
 
+  for (int i = bitSize - 1; i >= 0; i--) {
+    cout << intToPrint[i].reveal();
+  }
+  return;
+}
+
+void printIntegerArray(Integer* intToPrint, int arraySize, int bitSize) {
+  for(int i = 0; i < arraySize; i++) {
+    printInteger(intToPrint[i], bitSize);
+    cout << ", ";
+  }
+  cout << endl;
+  return;
+}
 
 string SHA256HashString(string msg);
-string run_secure_sha256(string msg, uint blocks, Version test_type);
+// string run_secure_sha256(string msg, uint blocks, Version test_type);
+
+void run_secure_hmac(Integer sec_blocks[1][16], Integer final[8]);
 string test_output(Integer result[8]);
-
-void test_sigmas(int party, int range=1<<25, int runs=50) {
-  PRG prg;
-  for(int i = 0; i < runs; ++i) {
-    unsigned long long x;
-    prg.random_data(&x, 8);
-    x %= range;
-    Integer a(BITS,  x, ALICE);
-
-    // make sure both parties have same clear values
-    x = a.reveal<uint>(PUBLIC);
-
-    // test sigma functions
-    uint result = SIGMA_UPPER_0(a).reveal<uint>(PUBLIC);
-    assert ((SIGMA_UPPER_0(x)) == result);
-
-    result = SIGMA_UPPER_1(a).reveal<uint>(PUBLIC);
-    assert ((SIGMA_UPPER_1(x)) == result);
-
-    result = SIGMA_LOWER_0(a).reveal<uint>(PUBLIC);
-    assert ((SIGMA_LOWER_0(x)) == result);
-
-    result = SIGMA_LOWER_1(a).reveal<uint>(PUBLIC);
-    assert ((SIGMA_LOWER_1(x)) == result);
-  }
-
-  cout << "Passed " << runs << " tests of SHA256 basic sigma functions." << endl;
-}
-
-void test_components(int party, int range=1<<25, int runs=50) {
-  PRG prg;
-  for(int i = 0; i < runs; ++i) {
-    unsigned long long x,y,z, n;
-    prg.random_data(&x, 8);
-    prg.random_data(&y, 8);
-    prg.random_data(&z, 8);
-    prg.random_data(&n, 8);
-    x %= range;
-    y %= range;
-    z %= range;
-    n %= 32;
-
-    Integer a(BITS,  x, ALICE);
-    Integer b(BITS,  y, ALICE);
-    Integer c(BITS,  z, BOB);
-    Integer pn(BITS, n, BOB);
-
-    // make sure both parties have same clear values
-    x = a.reveal<uint>(PUBLIC);
-    y = b.reveal<uint>(PUBLIC);
-    z = c.reveal<uint>(PUBLIC);
-    n = pn.reveal<uint>(PUBLIC);
-
-    // test ch
-    uint result = CH(a,b,c).reveal<uint>(PUBLIC);
-    assert ((CH(x,y,z)) == result);
-
-    // test maj
-    result = MAJ(a,b,c).reveal<uint>(PUBLIC);
-    assert ((MAJ(x,y,z)) == result);
-
-    // test shr32
-    result = SHR32(a, pn).reveal<uint>(PUBLIC);
-    assert ((SHR32(x, n)) == result);
-
-    // test rot32
-    result = ROR32(a, pn).reveal<uint>(PUBLIC);
-    assert (ROR32(x,n) == result);
-  }
-  cout << "Passed " << runs << " tests of SHA256 component functions." << endl;
-}
-
-// tests compose function (takes 8-block result, squashes into long hash)
-// (comparison is to the in-the-clear version I've been using)
-// TODO This is broken
-void test_compose(int runs=50) {
-  // reveal result, parse final hash
-  PRG prg;
-  unsigned long long range = 1;
-  range = range << 32; // doing this in one line raises too-short error
-
-  for(int i = 0; i < runs; ++i) {
-    Integer result[8];
-    unsigned long long rs[8];
-    for(int r=0; r<8; r++) {
-      prg.random_data(&(rs[r]), 8);
-      rs[r] %= range;
-    }
-    // this segfaults when I try to initilize results in the loop
-    result[0] = Integer(32, (uint) rs[0], ALICE);
-    result[1] = Integer(32, (uint) rs[1], BOB);
-    result[2] = Integer(32, (uint) rs[2], BOB);
-    result[3] = Integer(32, (uint) rs[3], ALICE);
-    result[4] = Integer(32, (uint) rs[4], BOB);
-    result[5] = Integer(32, (uint) rs[5], ALICE);
-    result[6] = Integer(32, (uint) rs[6], BOB);
-    result[7] = Integer(32, (uint) rs[7], ALICE);
-
-    // in the clear
-    string res = "";
-    for (int r=0; r<8; r++){
-      res += get_bitstring(result[r]);
-    }
-    res = change_base(res, 2, 16);
-
-    // secure -- note use of special unsigned reveal function
-    Integer hash = composeSHA256result(result);
-    string hres = change_base(hash.reveal_unsigned(PUBLIC), 10,16);
-
-    assert ( hres.compare(res) == 0 );
-  }
-  cout << "Passed " << runs << " tests for SHA256 output formatting" << endl;
-}
 
 
 // this is not actually random because I don't seed rand().
@@ -539,46 +443,6 @@ string gen_random(const int len) {
   return s;
 }
 
-void test_known_vector2() {
-  // known test vector from di-mgt.com.au
-  string msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-  string expected = SHA256HashString(msg);
-  string actual = run_secure_sha256(msg, 2, INSEC2);
-
-  boost::algorithm::to_lower(expected);
-  boost::algorithm::to_lower(actual);
-
-  cout << actual << endl;
-  assert ( expected.compare(actual) == 0);
-  assert ( expected.compare("248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1") == 0 );
-}
-
-
-void test_end_to_end() {
-  // randomized tests of 1-3 block-length messages
-  for (int len=0; len < 184; len++) {
-    string msg = gen_random(len);
-    string expected = SHA256HashString(msg);
-    string actual;
-
-    if (len < 56) {
-      actual = run_secure_sha256(msg, 1, SEC1);
-    } else if (len < 120) {
-      actual = run_secure_sha256(msg, 2, SEC2);
-      string insec_actual = run_secure_sha256(msg, 2, INSEC2);
-      assert (actual.compare(insec_actual) == 0);
-    } else { // len < 184
-      actual = run_secure_sha256(msg, 3, SEC3);
-    }
-
-    boost::algorithm::to_lower(expected);
-    boost::algorithm::to_lower(actual);
-
-    assert ( expected.compare(actual) == 0);
-  }
-  
-  cout << "Passed 248 SHA256 end-to-end tests." << endl;
-}
 
 // reference sha256 implementation by CryptoPP
 string SHA256HashString(string msg){
@@ -613,10 +477,59 @@ string padSHA256(string const &input) {
   return ret;
 }
 
+void resize_blocks(Integer input[32], Integer resized[8]) {
+  Integer four = Integer(32, 4, PUBLIC);
+  for (int i = 0; i < 8; i++) {
+    Integer temp = input[i * 4].resize(32, false);
+    resized[i] = temp;
+  
+    for (int j = 1; j < 4; j++) {
+      resized[i] = (resized[i] << four | input[(4*i)+j]);
+    }
+  }
+}
+
 // test sha256 implementation 
-string run_secure_sha256(string msg, uint blocks, Version test_type) {
-  uint msg_blocks[blocks][16];
-  memset( msg_blocks, 0, blocks*16*sizeof(uint) );
+void run_secure_hmac(Integer key[32], Integer sec_blocks[1][16], Integer final[8]) {
+
+
+  Integer opad[32];
+  Integer ipad[32];
+
+  for (int i = 0; i < 32; i++) {
+    ipad[i] = key[i] ^ Integer(8, 0x36, PUBLIC);
+    opad[i] = key[i] ^ Integer(8, 0x5c, PUBLIC);
+  }
+
+  Integer ipad_resize[8];
+  resize_blocks(ipad, ipad_resize);
+  Integer opad_resize[8];
+  resize_blocks(opad, opad_resize);
+
+  for (int i = 0; i < 8; i++) {
+    sec_blocks[0][i] = ipad_resize[i];
+  }
+
+  Integer innerSHA[8];    
+  computeSHA256_1d(sec_blocks, innerSHA);
+
+  Integer sec_blocks_2[1][16];
+
+  for (int t=0; t < 8; t++) {
+    sec_blocks_2[0][t] = opad_resize[t];
+  }
+
+  for (int t=0; t < 8; t++) {
+    sec_blocks_2[0][t+8] = innerSHA[t];
+  }
+  computeSHA256_1d(sec_blocks_2, final);
+
+}
+
+
+void strToBlocks(string msg, uint msg_blocks[1][16]) {
+  int blocks = 1;
+
 
   // pad message using insecure scheme
   string padded_msg = padSHA256(msg);
@@ -636,38 +549,41 @@ string run_secure_sha256(string msg, uint blocks, Version test_type) {
       msg_blocks[b][i] = (uint) strtoul(blk.c_str(), NULL,16);
     }
   }
-  Integer result[8];
-
-  // MPC - run sha256 for different block lengths
-  if (test_type == INSEC2) {
-    computeSHA256_2l(msg_blocks, result);
-  } else { // SEC1 || SEC2 || SEC3
-    Integer sec_blocks[blocks][16];
-    for (uint b=0; b < blocks; b++) {
-      for (int t=0; t < 16; t++) {
-        sec_blocks[b][t] = Integer(BITS, msg_blocks[b][t], CUST);
-      }
-    }
-    
-    switch (test_type) {
-      case SEC1 : computeSHA256_1d(sec_blocks, result); break;
-      case SEC2 : computeSHA256_2d(sec_blocks, result); break;
-      case SEC3 : computeSHA256_3d(sec_blocks, result); break;
-      default : cout << "impossible! not implemented" << endl;
-    }
-  }
-
-  // convert output to correct-length string
-  Integer hash = composeSHA256result(result);
-  string res = hash.reveal_unsigned(PUBLIC,16);
-  while (res.length() < 64) {
-    res = '0' + res;
-  }
-
-  return res;
 }
 
+void test_known_vector2() {
+  // known test vector from di-mgt.com.au
+  int blocks = 1;
+  string msg = "abcdefghabcdefghabcdefghabcdefgh";
+  string key_str = "12345678123456781234567812345678";
 
+  Integer key[32];
+  for (int i = 0; i < 32; i++) {
+    key[i] = Integer(8, key_str[i], ALICE);
+  }
+  
+  uint msg_blocks[blocks][16];
+   memset( msg_blocks, 0, blocks*16*sizeof(uint) );
+  uint key_blocks[blocks][16];
+   memset( key_blocks, 0, blocks*16*sizeof(uint) );
+
+  strToBlocks(msg, msg_blocks);
+  strToBlocks(key_str, key_blocks);
+
+  Integer sec_blocks[blocks][16];
+
+  for (int t=0; t < 8; t++) {
+    sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
+    sec_blocks[0][t+8] = Integer(BITS, msg_blocks[0][t], BOB); // message 
+  }
+
+  Integer final[8];
+  run_secure_hmac(key, sec_blocks, final);
+
+cout << "HELLO>\n";
+
+  printIntegerArray(final, 8, 32);
+}
 
 int main(int argc, char** argv) {
   // run in semihonest library
@@ -677,11 +593,9 @@ int main(int argc, char** argv) {
     return 1;
   }
   parse_party_and_port(argv, &party, &port);
-  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port);
+  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
-
-    // setup_plain_prot(true, "sha256.circuit.txt");
 
   // // run unit tests
   // test_components(party);
