@@ -178,6 +178,8 @@ Integer HMAC_Result(EMP_HMAC_Context *context, Integer* digest)
   /* (Use digest here as a temporary buffer.) */
   // Integer ret =
   SHA256_Result(&context->shaContext, digest);
+  cout << "INNER HMAC" << endl;
+  printIntegerArray(digest,32,8);
   /* perform outer SHA */
   /* init context for 2nd pass */
   SHA256_Reset(&context->shaContext);

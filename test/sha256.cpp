@@ -477,52 +477,83 @@ string padSHA256(string const &input) {
   return ret;
 }
 
-void resize_blocks(Integer input[32], Integer resized[8]) {
-  Integer four = Integer(32, 4, PUBLIC);
-  for (int i = 0; i < 8; i++) {
+// Integer composeSHA256result(Integer result[8]) {
+//   Integer thirtytwo(256, 32, PUBLIC);
+//   result[0].resize(256, false);
+//   Integer hash = result[0];
+//   for(int i=1; i<8; i++) {
+//     result[i].resize(256, false);
+//     hash = (hash << thirtytwo) | result[i];
+//   }
+//   return hash;
+// }
+
+void resize_blocks(Integer input[64], Integer resized[16]) {
+  for (int i = 0; i < 16; i++) {
     Integer temp = input[i * 4].resize(32, false);
     resized[i] = temp;
   
     for (int j = 1; j < 4; j++) {
-      resized[i] = (resized[i] << four | input[(4*i)+j]);
+      input[(4*i) + j].resize(32,false);
+      resized[i] = (resized[i] << 8) | input[(4*i)+j];
     }
   }
 }
 
 // test sha256 implementation 
-void run_secure_hmac(Integer key[32], Integer sec_blocks[1][16], Integer final[8]) {
+void run_secure_hmac(Integer key_blocks[16], Integer sec_blocks[2][16], Integer final[8]) {
+  Integer pad1[64]; 
+  Integer pad2[64];
+  Integer pad1_resized[16];
+  Integer pad2_resized[16];
 
-
-  Integer opad[32];
-  Integer ipad[32];
-
-  for (int i = 0; i < 32; i++) {
-    ipad[i] = key[i] ^ Integer(8, 0x36, PUBLIC);
-    opad[i] = key[i] ^ Integer(8, 0x5c, PUBLIC);
+  for (int i = 0; i < 64; i++) {
+    pad1[i] = Integer(8, 0x36, PUBLIC);
+    pad2[i] = Integer(8, 0x5c, PUBLIC);
   }
 
-  Integer ipad_resize[8];
-  resize_blocks(ipad, ipad_resize);
-  Integer opad_resize[8];
-  resize_blocks(opad, opad_resize);
-
-  for (int i = 0; i < 8; i++) {
-    sec_blocks[0][i] = ipad_resize[i];
+  for (int i =0 ; i < 16; i ++) {
+    pad1_resized[i] = Integer(32,0,PUBLIC);
+    pad2_resized[i] = Integer(32,0,PUBLIC);
   }
+
+  resize_blocks(pad1, pad1_resized);
+  resize_blocks(pad2, pad2_resized);
+
+  Integer opad[16];
+  Integer ipad[16];  
+
+  for (int i = 0; i < 16; i++) {
+    ipad[i] = key_blocks[i] ^ pad1_resized[i];
+    opad[i] = key_blocks[i] ^ pad2_resized[i];
+  }
+
+  for (int i = 0; i < 16; i++) {
+    sec_blocks[0][i] = ipad[i];
+  }
+  sec_blocks[1][8] = Integer(32,0x80000000,PUBLIC);
+  sec_blocks[1][15] = Integer(32,0x300,PUBLIC);
 
   Integer innerSHA[8];    
-  computeSHA256_1d(sec_blocks, innerSHA);
+  for (int i =0 ; i < 8; i ++) {
+    innerSHA[i] = Integer(32,0,PUBLIC);
+  }
+  computeSHA256_2d(sec_blocks, innerSHA);
 
-  Integer sec_blocks_2[1][16];
+  Integer sec_blocks_2[2][16];
 
-  for (int t=0; t < 8; t++) {
-    sec_blocks_2[0][t] = opad_resize[t];
+  for (int t=0; t < 16; t++) {
+    sec_blocks_2[0][t] = opad[t];
   }
 
   for (int t=0; t < 8; t++) {
-    sec_blocks_2[0][t+8] = innerSHA[t];
+    sec_blocks_2[1][t] = innerSHA[t];
+    sec_blocks_2[1][t+8] = Integer(32,0,PUBLIC);
   }
-  computeSHA256_1d(sec_blocks_2, final);
+  sec_blocks_2[1][8] = Integer(32,0x80000000,PUBLIC);
+  sec_blocks_2[1][15] = Integer(32,0x300,PUBLIC);
+
+  computeSHA256_2d(sec_blocks_2, final);
 
 }
 
@@ -553,7 +584,7 @@ void strToBlocks(string msg, uint msg_blocks[1][16]) {
 
 void test_known_vector2() {
   // known test vector from di-mgt.com.au
-  int blocks = 1;
+  int blocks = 2;
   string msg = "abcdefghabcdefghabcdefghabcdefgh";
   string key_str = "12345678123456781234567812345678";
 
@@ -571,14 +602,22 @@ void test_known_vector2() {
   strToBlocks(key_str, key_blocks);
 
   Integer sec_blocks[blocks][16];
+  Integer key_blocks_int[16];
+
+  for (int t=0; t < 16; t++) {
+    //sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
+    sec_blocks[0][t] = Integer(BITS, 0, PUBLIC);
+    sec_blocks[1][t] = Integer(BITS, msg_blocks[0][t], BOB); // message 
+  }
 
   for (int t=0; t < 8; t++) {
-    sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
-    sec_blocks[0][t+8] = Integer(BITS, msg_blocks[0][t], BOB); // message 
+    //sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
+    key_blocks_int[t] = Integer(BITS, key_blocks[0][t], ALICE); // message 
+    key_blocks_int[t+8] = Integer(BITS,0,ALICE);
   }
 
   Integer final[8];
-  run_secure_hmac(key, sec_blocks, final);
+  run_secure_hmac(key_blocks_int, sec_blocks, final);
 
 cout << "HELLO>\n";
 
