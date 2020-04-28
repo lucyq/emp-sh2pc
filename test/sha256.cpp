@@ -558,35 +558,22 @@ void run_secure_hmac(Integer key_blocks[16], Integer sec_blocks[2][16], Integer 
 }
 
 
-void strToBlocks(string msg, uint msg_blocks[1][16]) {
-  int blocks = 1;
-
-
-  // pad message using insecure scheme
-  string padded_msg = padSHA256(msg);
-  string padded_msg_hex;
-
-  // encode message in hex using cryptopp tools
-  CryptoPP::StringSource foo(padded_msg, true,
-      new CryptoPP::HexEncoder (
-        new CryptoPP::StringSink(padded_msg_hex)));
-
-  // parse padded message into blocks
-  assert (padded_msg_hex.length() == blocks * 128);
+void strToBlocks(string padded_msg_hex, uint msg_blocks[1][16], int msg_length) { // 16 or 32 
   string blk;
-  for (uint b=0; b<blocks; b++) {
-    for (int i=0; i<16; i++) {
-      blk = padded_msg_hex.substr((b*128) + (i*8), 8);
-      msg_blocks[b][i] = (uint) strtoul(blk.c_str(), NULL,16);
-    }
+  for (int i=0; i< (msg_length/4); i++) {
+    blk = padded_msg_hex.substr((0) + (i*8), 8);
+    msg_blocks[0][i] = (uint) strtoul(blk.c_str(), NULL,16);
+  }
+  for (int i= (msg_length/4); i < 16; i++) {
+    msg_blocks[0][i] = (uint)00000000;
   }
 }
 
 void test_known_vector2() {
   // known test vector from di-mgt.com.au
   int blocks = 2;
-  string msg = "abcdefghabcdefghabcdefghabcdefgh";
-  string key_str = "12345678123456781234567812345678";
+  string msg = "3358a33dc1ab0a9f1386124d439f5182";
+  string key_str = "ad027ffb7e71c2dfe6019e90ee200fc0e70ffc1e175d793b22b26081dc75a761";
 
   Integer key[32];
   for (int i = 0; i < 32; i++) {
@@ -598,8 +585,8 @@ void test_known_vector2() {
   uint key_blocks[blocks][16];
    memset( key_blocks, 0, blocks*16*sizeof(uint) );
 
-  strToBlocks(msg, msg_blocks);
-  strToBlocks(key_str, key_blocks);
+  strToBlocks(msg, msg_blocks, 16);
+  strToBlocks(key_str, key_blocks, 32);
 
   Integer sec_blocks[blocks][16];
   Integer key_blocks_int[16];
