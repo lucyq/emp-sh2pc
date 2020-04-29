@@ -84,9 +84,4 @@ add_test(iex_token)
 #add_test (gc-sha)
 # add_test(update)
 # add_test(update_test)
-add_test(sha256)
 #add_test(hmac2)
-
-target_link_libraries(sha256 ${CRYPTOPP_LIBRARIES})
-
-install(TARGETS sha256 DESTINATION bin)

@@ -8,6 +8,7 @@
 #include <ctype.h>
 
 #include "hmac.h"
+#include "hmac_optimized.h"
 
 using namespace emp;
 using namespace std; 
@@ -227,6 +228,12 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
 
   token[0] = Integer(8,'1',PUBLIC);
 
+
+  Integer label_key_2[8];
+  run_hmac(k_reconstruct, sn1, SN_LENGTH+1, label_key2);
+  cout << "LABEL KEY!!!\n";
+  printIntegerArray(label_key_2, 8, 32);
+
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
 
   static Integer utk[96];
@@ -354,19 +361,27 @@ int main(int argc, char** argv) {
   char* r_hex = argv[5];
   char* rprime_hex = argv[6];
 
-  // NetIO * io = new NetIO(party==ALICE ? nullptr : "18.221.224.217", port); // aws
-  // NetIO * io = new NetIO(party==ALICE ? nullptr : "34.70.234.217", port); // gcloud
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
 
-  //testUpdate1();  
-  //testUpdate2();
+
 
   char* k_share = k_share_hex;
   char* p = p_hex;
   char* r = r_hex;
   char* rprime = rprime_hex;
+
+// TODO: CONVERT TO BLOCKS
+//   uint msg_blocks[blocks][16];
+//    memset( msg_blocks, 0, blocks*16*sizeof(uint) );
+//   uint key_blocks[blocks][16];
+//    memset( key_blocks, 0, blocks*16*sizeof(uint) );
+// TODO: generalize strtoblocks 
+//   strToBlocks(msg, msg_blocks, msg_length);
+//   strToBlocks(key_str, key_blocks, 32);
+
+
   convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
   convertHexToChar(p_hex,p,DATA_LENGTH);
   convertHexToChar(r_hex,r,RANDOM_LENGTH);
