@@ -71,6 +71,7 @@ endmacro()
 
 # add_test(hmac)
 add_test(update)
+add_test(update2)
 add_test(query)
 add_test(bit)
 add_test(sha_test)
