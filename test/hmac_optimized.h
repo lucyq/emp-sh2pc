@@ -214,7 +214,7 @@ void computeSHA256_2d(Integer message[2][16], Integer result[8]) {
 string SHA256HashString(string msg);
 // string run_secure_sha256(string msg, uint blocks, Version test_type);
 
-void run_secure_hmac(Integer sec_blocks[1][16], Integer final[8]);
+//void run_secure_hmac(Integer sec_blocks[1][16], Integer final[8]);
 string test_output(Integer result[8]);
 
 
@@ -231,7 +231,7 @@ void resize_blocks(Integer input[64], Integer resized[16]) {
 }
 
 // test sha256 implementation 
-void run_secure_hmac(Integer key_blocks[16], Integer sec_blocks[2][16], Integer final[8]) {
+void run_secure_hmac(Integer key_blocks[16], Integer msg[2][16], int msg_length, Integer final[8]) {
   Integer pad1[64]; 
   Integer pad2[64];
   Integer pad1_resized[16];
@@ -287,6 +287,25 @@ void run_secure_hmac(Integer key_blocks[16], Integer sec_blocks[2][16], Integer 
 
 }
 
+// Pad the input to a multiple of 512 bits, and add the length
+// in binary to the end.
+// This was implemented by Jerry Coffin from StackExchange
+void padSHA256(Integer[16] input, int input_len, Integer[2][16] output) {
+  static const size_t block_bits = 512;
+  uint64_t length = (uint64_t)input_len;
+  size_t remainder = length % block_bits;
+  size_t k = (remainder <= 448) ? 448 - remainder : 960 - remainder;
+  std::string padding("\x80");
+  padding.append(std::string(k/8, '\0'));
+  --length;
+  for (int i=sizeof(length)-1; i>-1; i--) {
+    unsigned char bc = length >> (i*8) & 0xff;
+    padding.push_back(bc);
+  }
+  std::string ret(input+padding);
+  return ret;
+}
+
 
 void strToBlocks(string padded_msg_hex, uint msg_blocks[1][16], int msg_length) { // 16 or 32 
   string blk;
@@ -299,22 +318,24 @@ void strToBlocks(string padded_msg_hex, uint msg_blocks[1][16], int msg_length) 
   }
 }
 
-void run_hmac(Integer* key, Integer* msg, int msg_length, Integer final[8]) {
+void run_hmac(Integer key[16], Integer msg, int msg_length, Integer final[8]) {
   int blocks = 2;
   
-  Integer sec_blocks[blocks][16];
-  Integer key_blocks_int[16];
+  // Integer sec_blocks[blocks][16];
+  // Integer key_blocks_int[16];
 
-  for (int t=0; t < 16; t++) {
-    //sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
-    sec_blocks[0][t] = Integer(BITS, 0, PUBLIC);
-    sec_blocks[1][t] = Integer(BITS, msg_blocks[0][t], BOB); // message 
-  }
+  // for (int t=0; t < 16; t++) {
+  //   //sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
+  //   sec_blocks[0][t] = Integer(BITS, 0, PUBLIC);
+  //   sec_blocks[1][t] = Integer(BITS, msg_blocks[0][t], BOB); // message 
+  // }
 
-  for (int t=0; t < 8; t++) {
-    //sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
-    key_blocks_int[t] = Integer(BITS, key_blocks[0][t], ALICE); // message 
-    key_blocks_int[t+8] = Integer(BITS,0,ALICE);
-  }
-  run_secure_hmac(key_blocks_int, sec_blocks, final);
+  // for (int t=0; t < 8; t++) {
+  //   //sec_blocks[0][t] = Integer(BITS, key_blocks[0][t], ALICE); // key
+  //   key_blocks_int[t] = Integer(BITS, key_blocks[0][t], ALICE); // message 
+  //   key_blocks_int[t+8] = Integer(BITS,0,ALICE);
+  // }
+  // run_secure_hmac(key_blocks_int, sec_blocks, final);
+  cout << msg_length << endl;
+  run_secure_hmac(key,msg, msg_length, final);
 }

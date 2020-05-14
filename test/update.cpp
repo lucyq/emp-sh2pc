@@ -108,14 +108,14 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
 }
 
 
-void xor_reconstruct(char* int1, char* int2, int output_length, Integer* output) {
+void xor_reconstruct(uint int1[1][16], uint int2[1][16], int output_length, Integer output[16]) {
   Integer intMsg1[output_length];
   for (int i = 0; i < output_length; i++) {
-    intMsg1[i] = Integer(8, int1[i], ALICE);
+    intMsg1[i] = Integer(32, int1[0][i], ALICE);
   }
   Integer intMsg2[output_length];
   for (int i = 0; i < output_length; i++) {
-    intMsg2[i] = Integer(8, int2[i], BOB);
+    intMsg2[i] = Integer(32, int2[0][i], BOB);
   }
 
   for (int i = 0; i < output_length; i++) {
@@ -146,7 +146,7 @@ bool compareUtk(char* expected, Integer* actual) {
   }
   return true; 
 }
-
+// 16 16 16 16 
 char* find_utk(char* k_reconstruct, char* p_reconstruct, char* r_reconstruct, char* rprime_reconstruct) {
 
     char sn1[SN_LENGTH + 1];
@@ -206,9 +206,12 @@ char* find_utk(char* k_reconstruct, char* p_reconstruct, char* r_reconstruct, ch
     return output;
 }
 
-Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer* r_reconstruct, Integer* rprime_reconstruct) {
-  Integer sn1[SN_LENGTH + 1];
-  Integer sn2[SN_LENGTH + 1];
+// 16 16 16 16 
+void find_secure_utk(Integer k_reconstruct[16], Integer p_reconstruct[16], Integer* r_reconstruct[16], Integer* rprime_reconstruct[16]) {
+  //Integer sn1[SN_LENGTH + 1];
+  //Integer sn2[SN_LENGTH + 1];
+  Integer sn1[16];
+  Integer sn2[16];
   Integer cid[32];
   Integer token[TOKEN_LENGTH];
 
@@ -229,10 +232,10 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
 
-  Integer label_key_2[8];
+  Integer label_key2[8];
   run_hmac(k_reconstruct, sn1, SN_LENGTH+1, label_key2);
   cout << "LABEL KEY!!!\n";
-  printIntegerArray(label_key_2, 8, 32);
+  printIntegerArray(label_key2, 8, 32);
 
   Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
 
@@ -356,64 +359,59 @@ int main(int argc, char** argv) {
   int port, party;
   parse_party_and_port(argv, &party, &port);
 
-  char* k_share_hex = argv[3];
-  char* p_hex = argv[4];
-  char* r_hex = argv[5];
-  char* rprime_hex = argv[6];
+  char* k_share = argv[3];
+  char* p_share = argv[4];
+  char* r_share = argv[5];
+  char* rprime_share = argv[6];
 
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
 
+  int blocks = 1;
+  uint k_share_blocks[blocks][16];
+  memset(k_share_blocks, 0, blocks*16*sizeof(uint) );
+  uint p_share_blocks[blocks][16];
+  memset(p_share_blocks, 0, blocks*16*sizeof(uint) );
+  uint r_share_blocks[blocks][16];
+  memset(r_share_blocks, 0, blocks*16*sizeof(uint) );
+  uint rprime_share_blocks[blocks][16];
+  memset(rprime_share_blocks, 0, blocks*16*sizeof(uint) );
 
+  strToBlocks((string)k_share,k_share_blocks,64);
+  strToBlocks((string)p_share,p_share_blocks,32);
+  strToBlocks((string)r_share,r_share_blocks,64);
+  strToBlocks((string)rprime_share,rprime_share_blocks,64); // TODO 
 
-  char* k_share = k_share_hex;
-  char* p = p_hex;
-  char* r = r_hex;
-  char* rprime = rprime_hex;
+  static Integer k_reconstruct[16];
+  static Integer p_reconstruct[16];
+  static Integer r_reconstruct[16];
+  static Integer rprime_reconstruct[16];
 
-// TODO: CONVERT TO BLOCKS
-//   uint msg_blocks[blocks][16];
-//    memset( msg_blocks, 0, blocks*16*sizeof(uint) );
-//   uint key_blocks[blocks][16];
-//    memset( key_blocks, 0, blocks*16*sizeof(uint) );
-// TODO: generalize strtoblocks 
-//   strToBlocks(msg, msg_blocks, msg_length);
-//   strToBlocks(key_str, key_blocks, 32);
-
-
-  convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
-  convertHexToChar(p_hex,p,DATA_LENGTH);
-  convertHexToChar(r_hex,r,RANDOM_LENGTH);
-  convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
-
-  static Integer k_reconstruct[KEY_LENGTH];
-  static Integer p_reconstruct[DATA_LENGTH];
-  static Integer r_reconstruct[RANDOM_LENGTH];
-  static Integer rprime_reconstruct[RPRIME_LENGTH];
-
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-  }
-  for (int i = 0; i < DATA_LENGTH; i++) {
-    p_reconstruct[i] = Integer(8, p[i], PUBLIC);
-  }
-  for (int i = 0; i < RANDOM_LENGTH; i++) {
-    r_reconstruct[i] = Integer(8, r[i], PUBLIC);
-  }
-  for (int i = 0; i < RPRIME_LENGTH; i++) {
-    rprime_reconstruct[i] = Integer(8, r[i], PUBLIC);
-  }
+  // for (int i = 0; i < 16; i++) {
+  //   k_reconstruct[i] = Integer(32, k_share_blocks[0][i], PUBLIC);
+  // }
+  // for (int i = 0; i < 16; i++) {
+  //   p_reconstruct[i] = Integer(32, p_share_blocks[0][i], PUBLIC);
+  // }
+  // for (int i = 0; i < 16; i++) {
+  //   r_reconstruct[i] = Integer(32, r_share_blocks[0][i], PUBLIC);
+  // }
+  // for (int i = 0; i < 16; i++) {
+  //   rprime_reconstruct[i] = Integer(32, rprime_share_blocks[0][i], PUBLIC);
+  // }
 
   // reconstructing everything between Alice and Bob 
-  xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
-  xor_reconstruct(p,p,DATA_LENGTH, p_reconstruct); 
-  xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
-  xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
+  xor_reconstruct(k_share_blocks,k_share_blocks,16, k_reconstruct); 
+  xor_reconstruct(p_share_blocks,p_share_blocks,16, p_reconstruct); 
+  xor_reconstruct(r_share_blocks,r_share_blocks,16, r_reconstruct);
+  xor_reconstruct(rprime_share_blocks,rprime_share_blocks,16, rprime_reconstruct);
 
   // cout << "P SHARE" << endl;
-  // printIntegerArray(k_reconstruct,KEY_LENGTH,8);
-  // printIntegerArray(p_reconstruct,DATA_LENGTH,8);
+  printIntegerArray(k_reconstruct,16,32);
+  printIntegerArray(p_reconstruct,16,32);
+  printIntegerArray(r_reconstruct,16,32);
+  printIntegerArray(rprime_reconstruct,16,32);
 
   Integer* k_reconstruct_ptr = k_reconstruct; 
   Integer* p_reconstruct_ptr = p_reconstruct; 
