@@ -8,6 +8,7 @@
 #include <ctype.h>
 
 #include "hmac.h"
+#include "hmac_optimized.h"
 
 using namespace emp;
 using namespace std; 
@@ -134,13 +135,13 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
 
   ctr[0] = Integer(8,'1',PUBLIC);
 
-  Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
+  Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
   //Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[i] = label_key[i];
   }
 
-  Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
+  Integer* tk2 = run_secure_hmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
 
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[KEY_LENGTH + i] = tk2[i];
