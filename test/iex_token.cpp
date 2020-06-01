@@ -6,8 +6,9 @@
 #include <openssl/evp.h>
 #include <stdio.h>
 #include <ctype.h>
-
+#include <vector>
 #include "hmac.h"
+#include "hmac_optimized.h"
 
 using namespace emp;
 using namespace std; 
@@ -123,9 +124,31 @@ void reveal(Integer* output, int LENGTH, string val) {
   cout << endl;
 }
 
+void convertHexToChar(char* hexChar, char* output, int ARRAY_LENGTH) { 
+    // initialize the ASCII code string as empty. 
+    string hex(hexChar);
+
+    //static char tmp[96];
+    //char* tmp2 = tmp; 
+    for (size_t i = 0; i < hex.length(); i += 2) 
+    { 
+        // extract two characters from hex string 
+        string part = hex.substr(i, 2); 
+  
+        // change it into base 16 and  
+        // typecast as the character 
+        char ch = stoul(part, nullptr, 16); 
+  
+        // add this char to final ASCII string 
+        output[i/2] = ch;
+    } 
+} 
+
 void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
+  char* temp = input;
+  convertHexToChar(input,temp,input_length);
   for (int i = 0; i < input_length; i++) {
-    output[i] = Integer(8,input[i], PARTY); 
+    output[i] = Integer(8,temp[i], PARTY); 
   }
   return;
 }
@@ -158,14 +181,25 @@ int main(int argc, char** argv) {
 
   char* key1 = "";
   char* key2 = "";
+  vector<char*> words;
   char* word1 = "";
-  char* word2 = ""; 
+  char* word2 = "";
+  int numwords = 0;
   if (party == ALICE) {
   	key1 = argv[3];
   	key2 = argv[4];
+    numwords = strtol(argv[5],NULL,10);
+    for (int i= 0; i < numwords; i++) {
+      words.push_back("");
+    }
   } else {
-  	word1 = argv[3];
-  	word2 = argv[4];
+    numwords = strtol(argv[3],NULL,10);
+    for (int i= 0; i < numwords; i++) {
+      //cout << argv[4+i] << endl;
+      words.push_back(argv[4+i]);
+    }
+    // word1 = argv[4];
+    // word2 = argv[5];
   }
 
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
@@ -175,42 +209,63 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  cout << "GETS HERE" << endl;
-  cout << strlen(word1) << endl;
-  cout << strlen(word2) << endl;
+  Integer keywords[numwords][WORD_LENGTH]; 
+  for (int i = 0; i < numwords; i++) {
+    //cout << "CURRWORD" << endl;
+    char* curr = words.back();
+    words.pop_back();
+    //static Integer currword[WORD_LENGTH];
+    reconstruct(curr,WORD_LENGTH,keywords[i],BOB);
+    //Integer* currword_ptr = currword;
+    //Integer* tmp = new Integer[WORD_LENGTH];
+    //tmp = currword;
+    //keywords[i] = tmp;
+    //printIntegerArray(keywords[i],32,8);
+  }
+  // cout << "CHECK KEYWORDS" << endl;
+  // for (int i =0 ; i < numwords; i ++) {
+  //   printIntegerArray(keywords[i],32,8);
+  // }
 
   Integer global_key[KEY_LENGTH];
   Integer local_key[KEY_LENGTH];
-  Integer word1_int[WORD_LENGTH];
-  Integer word2_int[WORD_LENGTH];
+  // Integer word1_int[WORD_LENGTH];
+  // Integer word2_int[WORD_LENGTH];
 
   reconstruct(key1,KEY_LENGTH,global_key,ALICE);
   reconstruct(key2,KEY_LENGTH,local_key,ALICE);
-  reconstruct(word1,WORD_LENGTH,word1_int,BOB);
-  reconstruct(word2,WORD_LENGTH,word2_int,BOB);
+  // reconstruct(word1,WORD_LENGTH,word1_int,BOB);
+  // reconstruct(word2,WORD_LENGTH,word2_int,BOB);
 
   Integer* global_key_ptr = global_key;
   Integer* local_key_ptr = local_key;
-  Integer* word1_int_ptr = word1_int;
-  Integer* word2_int_ptr = word2_int;
+  // Integer* word1_int_ptr = word1_int;
+  // Integer* word2_int_ptr = word2_int;
 
   Integer* keys[] = {global_key_ptr,local_key_ptr};
-  Integer* keywords[] = {word1_int_ptr,word2_int_ptr};
+  // Integer* keywords[numwords] = {word1_int_ptr,word2_int_ptr};
+  //printIntegerArray(keys[0],KEY_LENGTH,8);
+  //printIntegerArray(keys[1],KEY_LENGTH,8);
 
 // needs to be ln of keywords
-  int numwords = 2;
+  // int numwords = 2;
+
+
+  //cout << "GETS HERE" << endl;
   for (int i = 0; i < numwords - 1; i++) {
-  	Integer* gtk = runHmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
+    //cout << "KEYWORD" << endl;
+    //printIntegerArray(keywords[i],WORD_LENGTH,8);
+  	Integer* gtk = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
   	reveal(gtk,32,"gtk");
-  	Integer* dtk = runHmac(keys[1],KEY_LENGTH,keywords[i],WORD_LENGTH);
+  	Integer* dtk = run_secure_hmac(keys[1],KEY_LENGTH,keywords[i],WORD_LENGTH);
   	reveal(dtk,32,"dtk");
   	for (int j = i+1; j < numwords; j++) {
-  		Integer* tmp_key = runHmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
-  		Integer* ltk = runHmac(tmp_key,KEY_LENGTH,keywords[j],WORD_LENGTH);
+  		Integer* tmp_key = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
+  		Integer* ltk = run_secure_hmac(tmp_key,KEY_LENGTH,keywords[j],WORD_LENGTH);
   		reveal(ltk,32,"ltk");
   	}
   }
-  Integer* gtk_q = runHmac(keys[0],KEY_LENGTH,keywords[numwords-1],WORD_LENGTH);
+  Integer* gtk_q = run_secure_hmac(keys[0],KEY_LENGTH,keywords[numwords-1],WORD_LENGTH);
   reveal(gtk_q,32,"gtk");
 
   delete io;
