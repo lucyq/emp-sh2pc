@@ -9,6 +9,9 @@
 #include <vector>
 #include "hmac.h"
 #include "hmac_optimized.h"
+#include <sstream>
+#include <string>
+#include <iostream>
 
 using namespace emp;
 using namespace std; 
@@ -150,6 +153,9 @@ void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
   for (int i = 0; i < input_length; i++) {
     output[i] = Integer(8,temp[i], PARTY); 
   }
+  for (int i = input_length; i < 32; i++) {
+    output[i] = Integer(8,0,PARTY);
+  }
   return;
 }
 
@@ -174,48 +180,29 @@ bool compareUtk(char* expected, Integer* actual) {
   return true; 
 }
 
-int main(int argc, char** argv) {
-
-  int port, party;
-  parse_party_and_port(argv, &party, &port);
-
-  char* key1 = "";
-  char* key2 = "";
-  vector<char*> words;
-  char* word1 = "";
-  char* word2 = "";
-  int numwords = 0;
-  if (party == ALICE) {
-  	key1 = argv[3];
-  	key2 = argv[4];
-    numwords = strtol(argv[5],NULL,10);
-    for (int i= 0; i < numwords; i++) {
-      words.push_back("");
-    }
-  } else {
-    numwords = strtol(argv[3],NULL,10);
-    for (int i= 0; i < numwords; i++) {
-      //cout << argv[4+i] << endl;
-      words.push_back(argv[4+i]);
-    }
-    // word1 = argv[4];
-    // word2 = argv[5];
+vector<string> split_words(char* words) {
+  string my_str = words;
+  vector<string> result;
+  stringstream s_stream(my_str); //create string stream from the string
+  while(s_stream.good()) {
+    string substr;
+    getline(s_stream, substr, ','); //get first string delimited by comma
+    //cout << substr << endl;
+    //result.push_back((char*)substr.c_str());
+    result.push_back(substr);
   }
+  // for(int i = 0; i<result.size(); i++) {    //print all splitted strings
+  //   cout << result.at(i) << endl;
+  // }
+  return result;
+}
 
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
-  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
-
-  setup_semi_honest(io, party);
-
+void iex_token(Integer* key1, Integer* key2, Integer* key3, vector<string> words, int numwords) {
   Integer keywords[numwords][WORD_LENGTH]; 
   for (int i = 0; i < numwords; i++) {
-    //cout << "CURRWORD" << endl;
-    char* curr = words.back();
-    words.pop_back();
+    string curr = words.at(i);
     //static Integer currword[WORD_LENGTH];
-    reconstruct(curr,WORD_LENGTH,keywords[i],BOB);
+    reconstruct((char*)curr.c_str(),curr.length(),keywords[i],BOB);
     //Integer* currword_ptr = currword;
     //Integer* tmp = new Integer[WORD_LENGTH];
     //tmp = currword;
@@ -227,46 +214,169 @@ int main(int argc, char** argv) {
   //   printIntegerArray(keywords[i],32,8);
   // }
 
-  Integer global_key[KEY_LENGTH];
-  Integer local_key[KEY_LENGTH];
-  // Integer word1_int[WORD_LENGTH];
-  // Integer word2_int[WORD_LENGTH];
-
-  reconstruct(key1,KEY_LENGTH,global_key,ALICE);
-  reconstruct(key2,KEY_LENGTH,local_key,ALICE);
-  // reconstruct(word1,WORD_LENGTH,word1_int,BOB);
-  // reconstruct(word2,WORD_LENGTH,word2_int,BOB);
-
-  Integer* global_key_ptr = global_key;
-  Integer* local_key_ptr = local_key;
+  Integer* global_key_ptr = key1;
+  Integer* local_key_ptr = key2;
   // Integer* word1_int_ptr = word1_int;
   // Integer* word2_int_ptr = word2_int;
 
   Integer* keys[] = {global_key_ptr,local_key_ptr};
-  // Integer* keywords[numwords] = {word1_int_ptr,word2_int_ptr};
-  //printIntegerArray(keys[0],KEY_LENGTH,8);
-  //printIntegerArray(keys[1],KEY_LENGTH,8);
 
-// needs to be ln of keywords
-  // int numwords = 2;
-
-
-  //cout << "GETS HERE" << endl;
   for (int i = 0; i < numwords - 1; i++) {
     //cout << "KEYWORD" << endl;
     //printIntegerArray(keywords[i],WORD_LENGTH,8);
-  	Integer* gtk = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
-  	reveal(gtk,32,"gtk");
-  	Integer* dtk = run_secure_hmac(keys[1],KEY_LENGTH,keywords[i],WORD_LENGTH);
-  	reveal(dtk,32,"dtk");
-  	for (int j = i+1; j < numwords; j++) {
-  		Integer* tmp_key = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
-  		Integer* ltk = run_secure_hmac(tmp_key,KEY_LENGTH,keywords[j],WORD_LENGTH);
-  		reveal(ltk,32,"ltk");
-  	}
+    Integer* gtk = run_secure_hmac(key1,KEY_LENGTH,keywords[i],WORD_LENGTH);
+    reveal(gtk,32,"gtk");
+    Integer* dtk = run_secure_hmac(key2,KEY_LENGTH,keywords[i],WORD_LENGTH);
+    reveal(dtk,32,"dtk");
+    for (int j = i+1; j < numwords; j++) {
+      Integer* tmp_key = run_secure_hmac(key3,KEY_LENGTH,keywords[i],WORD_LENGTH);
+      Integer* ltk = run_secure_hmac(tmp_key,KEY_LENGTH,keywords[j],WORD_LENGTH);
+      reveal(ltk,32,"ltk");
+    }
   }
-  Integer* gtk_q = run_secure_hmac(keys[0],KEY_LENGTH,keywords[numwords-1],WORD_LENGTH);
+  Integer* gtk_q = run_secure_hmac(key1,KEY_LENGTH,keywords[numwords-1],WORD_LENGTH);
   reveal(gtk_q,32,"gtk");
+  //cout << "GETS HERE END OF IEX" << endl;
+}
+
+int main(int argc, char** argv) {
+
+  int port, party;
+  parse_party_and_port(argv, &party, &port);
+
+  char* master = "";
+  vector<vector<string> > queries;
+  vector<string> wordlengths = split_words(argv[4]);
+  int numqueries = wordlengths.size();
+  if (party == ALICE) {
+    master = argv[3];
+    for (int i = 0; i < numqueries; i++) {
+      vector<string> keywords;
+      for (int j = 0; j < stoi(wordlengths.at(i)); j++) {
+        keywords.push_back("");
+      }
+      queries.push_back(keywords);
+    }
+  } else {
+    master = "";
+    for (int i = 0; i < numqueries; i++) {
+      vector<string> tmp = split_words(argv[5+i]);
+      queries.push_back(tmp);
+    }
+  }
+
+//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
+//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
+//  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
+  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+
+  setup_semi_honest(io, party);
+  static Integer master_key[KEY_LENGTH];
+  reconstruct(master,KEY_LENGTH,master_key,ALICE);
+  Integer key1[KEY_LENGTH];
+  Integer key2[KEY_LENGTH];
+  Integer key3[KEY_LENGTH];
+  Integer token1[1];
+
+  token1[0] = Integer(8,'1',PUBLIC);
+  Integer* key1_tmp = run_secure_hmac(master_key,KEY_LENGTH,token1,1);
+  for (int i =0 ; i < KEY_LENGTH; i++) {
+    key1[i] = key1_tmp[i];
+  }
+
+  Integer token2[1];
+  token2[0] = Integer(8,'2',PUBLIC);
+  Integer* key2_tmp = run_secure_hmac(master_key,KEY_LENGTH,token2,1);
+  for (int i =0 ; i < KEY_LENGTH; i++) {
+    key2[i] = key2_tmp[i];
+  }
+
+  Integer token3[1];
+  token3[0] = Integer(8,'3',PUBLIC);
+  Integer* key3_tmp = run_secure_hmac(master_key,KEY_LENGTH,token3,1);
+  for (int i =0 ; i < KEY_LENGTH; i++) {
+    key3[i] = key3_tmp[i];
+  }
+
+  // Step 3: 
+  iex_token(key1,key2,key3,queries.at(0),queries.at(0).size());
+
+  // Step 4:
+  //cout << "BEG OF STEP 4" << endl;
+  for (int i = 1; i < numqueries; i++) {
+    for (int k = 0; k < queries.at(0).size(); k++) {
+      vector<string> searchTMP;
+      searchTMP.push_back(queries.at(0).at(k));
+      // cout << "INSIDE LOOP" << endl;
+      // cout << queries.at(i).size() << endl;
+
+      for (int r = 0; r < queries.at(i).size(); r++) {
+        cout << queries.at(i).at(r) << endl;
+        searchTMP.push_back(queries.at(i).at(r));
+      }
+
+      iex_token(key1,key2,key3,searchTMP,searchTMP.size());
+    }
+  }
+
+//   Integer keywords[numwords][WORD_LENGTH]; 
+//   for (int i = 0; i < numwords; i++) {
+//     //cout << "CURRWORD" << endl;
+//     char* curr = words.back();
+//     words.pop_back();
+//     //static Integer currword[WORD_LENGTH];
+//     reconstruct(curr,WORD_LENGTH,keywords[i],BOB);
+//     //Integer* currword_ptr = currword;
+//     //Integer* tmp = new Integer[WORD_LENGTH];
+//     //tmp = currword;
+//     //keywords[i] = tmp;
+//     //printIntegerArray(keywords[i],32,8);
+//   }
+//   // cout << "CHECK KEYWORDS" << endl;
+//   // for (int i =0 ; i < numwords; i ++) {
+//   //   printIntegerArray(keywords[i],32,8);
+//   // }
+
+//   Integer global_key[KEY_LENGTH];
+//   Integer local_key[KEY_LENGTH];
+//   // Integer word1_int[WORD_LENGTH];
+//   // Integer word2_int[WORD_LENGTH];
+
+//   reconstruct(key1,KEY_LENGTH,global_key,ALICE);
+//   reconstruct(key2,KEY_LENGTH,local_key,ALICE);
+//   // reconstruct(word1,WORD_LENGTH,word1_int,BOB);
+//   // reconstruct(word2,WORD_LENGTH,word2_int,BOB);
+
+//   Integer* global_key_ptr = global_key;
+//   Integer* local_key_ptr = local_key;
+//   // Integer* word1_int_ptr = word1_int;
+//   // Integer* word2_int_ptr = word2_int;
+
+//   Integer* keys[] = {global_key_ptr,local_key_ptr};
+//   // Integer* keywords[numwords] = {word1_int_ptr,word2_int_ptr};
+//   //printIntegerArray(keys[0],KEY_LENGTH,8);
+//   //printIntegerArray(keys[1],KEY_LENGTH,8);
+
+// // needs to be ln of keywords
+//   // int numwords = 2;
+
+
+//   //cout << "GETS HERE" << endl;
+//   for (int i = 0; i < numwords - 1; i++) {
+//     //cout << "KEYWORD" << endl;
+//     //printIntegerArray(keywords[i],WORD_LENGTH,8);
+//   	Integer* gtk = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
+//   	reveal(gtk,32,"gtk");
+//   	Integer* dtk = run_secure_hmac(keys[1],KEY_LENGTH,keywords[i],WORD_LENGTH);
+//   	reveal(dtk,32,"dtk");
+//   	for (int j = i+1; j < numwords; j++) {
+//   		Integer* tmp_key = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
+//   		Integer* ltk = run_secure_hmac(tmp_key,KEY_LENGTH,keywords[j],WORD_LENGTH);
+//   		reveal(ltk,32,"ltk");
+//   	}
+//   }
+//   Integer* gtk_q = run_secure_hmac(keys[0],KEY_LENGTH,keywords[numwords-1],WORD_LENGTH);
+//   reveal(gtk_q,32,"gtk");
 
   delete io;
   return 0;

@@ -303,8 +303,6 @@ void padSHA256_int(Integer* input, int input_len, Integer output[2][16]) { // 8 
 
 // test sha256 implementation 
 Integer* run_secure_hmac(Integer* key, int key_length, Integer* msg, int msg_length) {
-  // cout << "KEY" << endl;
-  // printIntegerArray(key,key_length,8);
   static Integer final[32];
   Integer key_resized[64]; 
   for (int i = 0; i < key_length; i++) {
@@ -371,9 +369,7 @@ Integer* run_secure_hmac(Integer* key, int key_length, Integer* msg, int msg_len
   }
   computeSHA256_2d(outerPadOutput, outerSHA);
 
-
   resize_blocks2(outerSHA,8,final);
-
   return final;
 }
 
