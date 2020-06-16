@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 
+
 using namespace emp;
 using namespace std; 
 
@@ -359,7 +360,7 @@ int main(int argc, char** argv) {
       for (int r = 0; r < queries.at(i).size(); r++) {
         searchTMP.push_back(queries.at(i).at(r));
       }
-      cout << "LABEL: " << i << " , " << k << endl;
+      cout << "LABEL: " << i << "," << k << endl;
       iex_token(key1,key2,key3,searchTMP,searchTMP.size());
     }
   }
