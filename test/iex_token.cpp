@@ -359,12 +359,13 @@ int main(int argc, char** argv) {
       for (int r = 0; r < queries.at(i).size(); r++) {
         searchTMP.push_back(queries.at(i).at(r));
       }
-
+      cout << "LABEL: " << i << " , " << k << endl;
       iex_token(key1,key2,key3,searchTMP,searchTMP.size());
     }
   }
 
   // Step 3: 
+  cout << queries.size() << " , " << queries.at(0).size() << endl;
   iex_token(key1,key2,key3,queries.at(0),queries.at(0).size());
 
 
