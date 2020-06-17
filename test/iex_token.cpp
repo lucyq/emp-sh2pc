@@ -223,10 +223,7 @@ void iex_token(Integer* key1, Integer* key2, Integer* key3, vector<string> words
   Integer* keys[] = {global_key_ptr,local_key_ptr};
 
   for (int i = 0; i < numwords; i++) {
-    //cout << "KEYWORD" << endl;
-    //printIntegerArray(keywords[i],WORD_LENGTH,8);
-    //for (int j = i; j < numwords; j++) {
-      // there exists subsearch of length i to numwords
+    cout << "TOKEN: " << endl; // note: do not delete. needed in JS parsing
       Integer gtk_tmp1[WORD_LENGTH + 1];
       Integer gtk_tmp2[WORD_LENGTH + 1];
       gtk_tmp1[0] = Integer(8,'1',BOB);
@@ -235,9 +232,6 @@ void iex_token(Integer* key1, Integer* key2, Integer* key3, vector<string> words
         gtk_tmp1[a] = keywords[i][a-1];
         gtk_tmp2[a] = keywords[i][a-1];
       }
-    // cout << "HELLO" << endl;
-    // printIntegerArray(gtk_tmp1,WORD_LENGTH+1,8);
-    // printIntegerArray(gtk_tmp2,WORD_LENGTH+1,8);
 
       Integer* gtk1 = run_secure_hmac(key1,KEY_LENGTH,gtk_tmp1,WORD_LENGTH + 1);
       reveal(gtk1,32,"gtk1");
@@ -360,74 +354,17 @@ int main(int argc, char** argv) {
       for (int r = 0; r < queries.at(i).size(); r++) {
         searchTMP.push_back(queries.at(i).at(r));
       }
-      cout << "LABEL: " << i << "," << k << endl;
+
+      // note: do not change. needed in JS for parsing
+      cout << "LABEL: " << i << " " << k << " $" << endl;
       iex_token(key1,key2,key3,searchTMP,searchTMP.size());
     }
   }
 
   // Step 3: 
-  cout << queries.size() << " , " << queries.at(0).size() << endl;
+  // note: do not change. needed in JS for parsing
+  cout << "LABEL: " << queries.size() << " " << queries.at(0).size() << " $" << endl;
   iex_token(key1,key2,key3,queries.at(0),queries.at(0).size());
-
-
-//   Integer keywords[numwords][WORD_LENGTH]; 
-//   for (int i = 0; i < numwords; i++) {
-//     //cout << "CURRWORD" << endl;
-//     char* curr = words.back();
-//     words.pop_back();
-//     //static Integer currword[WORD_LENGTH];
-//     reconstruct(curr,WORD_LENGTH,keywords[i],BOB);
-//     //Integer* currword_ptr = currword;
-//     //Integer* tmp = new Integer[WORD_LENGTH];
-//     //tmp = currword;
-//     //keywords[i] = tmp;
-//     //printIntegerArray(keywords[i],32,8);
-//   }
-//   // cout << "CHECK KEYWORDS" << endl;
-//   // for (int i =0 ; i < numwords; i ++) {
-//   //   printIntegerArray(keywords[i],32,8);
-//   // }
-
-//   Integer global_key[KEY_LENGTH];
-//   Integer local_key[KEY_LENGTH];
-//   // Integer word1_int[WORD_LENGTH];
-//   // Integer word2_int[WORD_LENGTH];
-
-//   reconstruct(key1,KEY_LENGTH,global_key,ALICE);
-//   reconstruct(key2,KEY_LENGTH,local_key,ALICE);
-//   // reconstruct(word1,WORD_LENGTH,word1_int,BOB);
-//   // reconstruct(word2,WORD_LENGTH,word2_int,BOB);
-
-//   Integer* global_key_ptr = global_key;
-//   Integer* local_key_ptr = local_key;
-//   // Integer* word1_int_ptr = word1_int;
-//   // Integer* word2_int_ptr = word2_int;
-
-//   Integer* keys[] = {global_key_ptr,local_key_ptr};
-//   // Integer* keywords[numwords] = {word1_int_ptr,word2_int_ptr};
-//   //printIntegerArray(keys[0],KEY_LENGTH,8);
-//   //printIntegerArray(keys[1],KEY_LENGTH,8);
-
-// // needs to be ln of keywords
-//   // int numwords = 2;
-
-
-//   //cout << "GETS HERE" << endl;
-//   for (int i = 0; i < numwords - 1; i++) {
-//     //cout << "KEYWORD" << endl;
-//     //printIntegerArray(keywords[i],WORD_LENGTH,8);
-//   	Integer* gtk = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
-//   	reveal(gtk,32,"gtk");
-//   	Integer* dtk = run_secure_hmac(keys[1],KEY_LENGTH,keywords[i],WORD_LENGTH);
-//   	reveal(dtk,32,"dtk");
-//   	for (int j = i+1; j < numwords; j++) {
-//   		Integer* tmp_key = run_secure_hmac(keys[0],KEY_LENGTH,keywords[i],WORD_LENGTH);
-//   		Integer* ltk = run_secure_hmac(tmp_key,KEY_LENGTH,keywords[j],WORD_LENGTH);
-//   		reveal(ltk,32,"ltk");
-//   	}
-//   }
-//   Integer* gtk_q = run_secure_hmac(keys[0],KEY_LENGTH,keywords[numwords-1],WORD_LENGTH);
-//   reveal(gtk_q,32,"gtk");
 
   delete io;
   return 0;
