@@ -161,6 +161,19 @@ void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
   return;
 }
 
+void reconstruct2(char* input, int input_length, Integer* output, int PARTY) {
+  char* temp = input;
+  convertHexToChar(input,temp,input_length);
+  for (int i = 0; i < input_length; i++) {
+    output[i] = Integer(8,temp[i], PARTY); 
+  }
+  for (int i = input_length; i < 32; i++) {
+    output[i] = Integer(8,0,PARTY);
+  }
+  return;
+}
+
+
 Integer* convertStringtoIntegerArray(char* s, int S_LENGTH) {
   Integer output[S_LENGTH];
   for (int i =0; i < S_LENGTH; i++) {
