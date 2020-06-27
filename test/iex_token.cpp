@@ -154,8 +154,9 @@ void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
   for (int i = 0; i < input_length; i++) {
     output[i] = Integer(8,temp[i], PARTY); 
   }
+  // 42 -> * 
   for (int i = input_length; i < 32; i++) {
-    output[i] = Integer(8,0,PARTY);
+    output[i] = Integer(8,42,PARTY);
   }
   return;
 }
@@ -333,10 +334,10 @@ int main(int argc, char** argv) {
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
-
   char* k_share = master;
   convertHexToChar(master,k_share,KEY_LENGTH);
 
+  auto t1 = clock_start();
   static Integer master_key[KEY_LENGTH];
 
   for (int i = 0; i < KEY_LENGTH; i++) {
@@ -395,6 +396,7 @@ int main(int argc, char** argv) {
   cout << "LABEL: " << queries.size() << " " << queries.at(0).size() << " $" << endl;
   iex_token(key1,key2,key3,queries.at(0),queries.at(0).size());
 
+  // cout << "Total Time: " << time_from(t1) << endl;
   delete io;
   return 0;
 }
