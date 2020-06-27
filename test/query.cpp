@@ -215,10 +215,6 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-
-  //testQuery1();  
-  //cout << "PASSED" << endl;
-
   cout << "begin query 2pc" << endl;
 
   char* k_share = k_share_hex;
@@ -229,6 +225,8 @@ int main(int argc, char** argv) {
   convertHexToChar(q_hex,q,SN_LENGTH);
   convertHexToChar(r_hex,r,RANDOM_LENGTH);
   convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+  
+  auto t1 = clock_start();
 
   static Integer k_reconstruct[KEY_LENGTH];
   static Integer q_reconstruct[SN_LENGTH];
@@ -305,6 +303,9 @@ int main(int argc, char** argv) {
     cout << ",";
   }
   cout << "End of Party 2 Output" << endl;
+
+
+  cout << "2PC Time: " << time_from(t1) << endl;
 
   delete io;
   return 0;

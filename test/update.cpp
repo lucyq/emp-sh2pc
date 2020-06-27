@@ -306,9 +306,6 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
-  //testUpdate1();  
-  //testUpdate2();
-
   cout << "begin actual 2pc" << endl;
   char* k_share = k_share_hex;
   char* p = p_hex;
@@ -318,6 +315,8 @@ int main(int argc, char** argv) {
   convertHexToChar(p_hex,p,DATA_LENGTH);
   convertHexToChar(r_hex,r,RANDOM_LENGTH);
   convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+
+  auto t1 = clock_start();
 
   static Integer k_reconstruct[KEY_LENGTH];
   static Integer p_reconstruct[DATA_LENGTH];
@@ -380,6 +379,9 @@ int main(int argc, char** argv) {
     cout << ",";
   }
   cout << "End of Party 2 Output" << endl;
+
+
+  cout << "2PC Time: " << time_from(t1) << endl;
 
   delete io;
   return 0;

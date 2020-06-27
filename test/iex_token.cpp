@@ -161,18 +161,6 @@ void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
   return;
 }
 
-void reconstruct2(char* input, int input_length, Integer* output, int PARTY) {
-  char* temp = input;
-  convertHexToChar(input,temp,input_length);
-  for (int i = 0; i < input_length; i++) {
-    output[i] = Integer(8,temp[i], PARTY); 
-  }
-  for (int i = input_length; i < 32; i++) {
-    output[i] = Integer(8,0,PARTY);
-  }
-  return;
-}
-
 
 Integer* convertStringtoIntegerArray(char* s, int S_LENGTH) {
   Integer output[S_LENGTH];
@@ -202,13 +190,8 @@ vector<string> split_words(char* words) {
   while(s_stream.good()) {
     string substr;
     getline(s_stream, substr, ','); //get first string delimited by comma
-    //cout << substr << endl;
-    //result.push_back((char*)substr.c_str());
     result.push_back(substr);
   }
-  // for(int i = 0; i<result.size(); i++) {    //print all splitted strings
-  //   cout << result.at(i) << endl;
-  // }
   return result;
 }
 
@@ -216,23 +199,13 @@ void iex_token(Integer* key1, Integer* key2, Integer* key3, vector<string> words
   Integer keywords[numwords][WORD_LENGTH]; 
   for (int i = 0; i < numwords; i++) {
     string curr = words.at(i);
-    //static Integer currword[WORD_LENGTH];
     reconstruct((char*)curr.c_str(),curr.length()/2,keywords[i],BOB);
-    //Integer* currword_ptr = currword;
-    //Integer* tmp = new Integer[WORD_LENGTH];
-    //tmp = currword;
-    //keywords[i] = tmp;
-    //printIntegerArray(keywords[i],32,8);
+   
   }
-  // cout << "CHECK KEYWORDS" << endl;
-  // for (int i =0 ; i < numwords; i ++) {
-  //   printIntegerArray(keywords[i],32,8);
-  // }
+ 
 
   Integer* global_key_ptr = key1;
   Integer* local_key_ptr = key2;
-  // Integer* word1_int_ptr = word1_int;
-  // Integer* word2_int_ptr = word2_int;
 
   Integer* keys[] = {global_key_ptr,local_key_ptr};
 
@@ -275,21 +248,13 @@ void iex_token(Integer* key1, Integer* key2, Integer* key3, vector<string> words
         ltk_tmp1[k] = keywords[j][k-1];
         ltk_tmp2[k] = keywords[j][k-1];
       }
-      //cout << "HELLO" << endl;
-      //printIntegerArray(ltk_tmp1,WORD_LENGTH+1,8);
-      //printIntegerArray(ltk_tmp2,WORD_LENGTH+1,8);
-
       Integer* tmp_key = run_secure_hmac(key1,KEY_LENGTH,keywords[i],WORD_LENGTH);
       Integer tmp_key2[32]; 
       for (int a = 0; a < 32; a++) {
         tmp_key2[a] = tmp_key[a];
       }
-      //printIntegerArray(tmp_key,WORD_LENGTH,8);
-      //printIntegerArray(ltk_tmp1,WORD_LENGTH+1,8);
       Integer* ltk1 = run_secure_hmac(tmp_key,KEY_LENGTH,ltk_tmp1,WORD_LENGTH+1);
       reveal(ltk1,32,"ltk1");
-      //printIntegerArray(tmp_key2,WORD_LENGTH,8);
-      //printIntegerArray(ltk_tmp2,WORD_LENGTH+1,8);
       Integer* ltk2 = run_secure_hmac(tmp_key2,KEY_LENGTH,ltk_tmp2,WORD_LENGTH+1);
       reveal(ltk2,32,"ltk2");
     //}
@@ -381,7 +346,7 @@ int main(int argc, char** argv) {
   cout << "LABEL: " << queries.size() << " " << queries.at(0).size() << " $" << endl;
   iex_token(key1,key2,key3,queries.at(0),queries.at(0).size());
 
-  // cout << "Total Time: " << time_from(t1) << endl;
+  cout << "2PC Time: " << time_from(t1) << endl;
   delete io;
   return 0;
 }
