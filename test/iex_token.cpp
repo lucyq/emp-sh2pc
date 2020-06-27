@@ -161,6 +161,23 @@ void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
   return;
 }
 
+void xor_reconstruct(char* int1, char* int2, int output_length, Integer* output) {
+  Integer intMsg1[output_length];
+  for (int i = 0; i < output_length; i++) {
+    intMsg1[i] = Integer(8, int1[i], ALICE);
+  }
+  Integer intMsg2[output_length];
+  for (int i = 0; i < output_length; i++) {
+    intMsg2[i] = Integer(8, int2[i], BOB);
+  }
+
+  for (int i = 0; i < output_length; i++) {
+    output[i] = intMsg1[i] ^ intMsg2[i]; 
+  }
+  return;
+
+}
+
 
 Integer* convertStringtoIntegerArray(char* s, int S_LENGTH) {
   Integer output[S_LENGTH];
@@ -281,7 +298,7 @@ int main(int argc, char** argv) {
       queries.push_back(keywords);
     }
   } else {
-    master = "";
+    master = argv[3];
     for (int i = 0; i < numqueries; i++) {
       vector<string> tmp = split_words(argv[5+i]);
       queries.push_back(tmp);
@@ -294,9 +311,19 @@ int main(int argc, char** argv) {
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
+  char* k_share = master;
+  convertHexToChar(master,k_share,KEY_LENGTH);
+
   auto t1 = clock_start();
   static Integer master_key[KEY_LENGTH];
-  reconstruct(master,KEY_LENGTH,master_key,ALICE);
+
+  for (int i = 0; i < KEY_LENGTH; i++) {
+    master_key[i] = Integer(8, k_share[i], PUBLIC);
+    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
+  }
+
+  xor_reconstruct(k_share,k_share,KEY_LENGTH,master_key);
+  printIntegerArray(master_key,KEY_LENGTH,8);
   Integer key1[KEY_LENGTH];
   Integer key2[KEY_LENGTH];
   Integer key3[KEY_LENGTH];
