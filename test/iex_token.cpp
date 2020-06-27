@@ -288,6 +288,7 @@ int main(int argc, char** argv) {
   vector<vector<string> > queries;
   vector<string> wordlengths = split_words(argv[4]);
   int numqueries = wordlengths.size();
+
   if (party == ALICE) {
     master = argv[3];
     for (int i = 0; i < numqueries; i++) {
@@ -321,9 +322,7 @@ int main(int argc, char** argv) {
     master_key[i] = Integer(8, k_share[i], PUBLIC);
     //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
-
   xor_reconstruct(k_share,k_share,KEY_LENGTH,master_key);
-  printIntegerArray(master_key,KEY_LENGTH,8);
   Integer key1[KEY_LENGTH];
   Integer key2[KEY_LENGTH];
   Integer key3[KEY_LENGTH];
