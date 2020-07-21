@@ -321,13 +321,24 @@ int main(int argc, char** argv) {
   string rprime_hex(tmp3);
 
   for (int i = 0; i < num_updates; i ++) {
-    char* p = p_hex.substr(32*i,32*(i+1)); // substring
-    char* r = r_hex.substr(192*i,192*(i+1)); // substring 
-    char* rprime = rprime_hex.substr(64*i,64*(i+1)); // substring
-    convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
-    convertHexToChar(p_hex,p,DATA_LENGTH);
-    convertHexToChar(r_hex,r,RANDOM_LENGTH);
-    convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+    char* p_tmp = new char[DATA_LENGTH * 2];
+    char* r_tmp = new char[RANDOM_LENGTH * 2];
+    char* rprime_tmp = new char[RPRIME_LENGTH * 2];
+
+    strcpy(p_tmp, p_hex.substr(32*i,32*(i+1)).c_str());
+    strcpy(r_tmp, r_hex.substr(192*i,192*(i+1)).c_str());
+    strcpy(rprime_tmp,rprime_hex.substr(64*i,64*(i+1)).c_str());
+    //char* p = p_hex.substr(32*i,32*(i+1)); // substring
+    //char* r = r_hex.substr(192*i,192*(i+1)); // substring 
+    //char* rprime = rprime_hex.substr(64*i,64*(i+1)); // substring
+    char* p = p_tmp;
+    char* r = r_tmp;
+    char* rprime = rprime_tmp;
+
+    //convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
+    convertHexToChar(p_tmp,p,DATA_LENGTH);
+    convertHexToChar(r_tmp,r,RANDOM_LENGTH);
+    convertHexToChar(rprime_tmp,rprime,RPRIME_LENGTH);
 
     auto t1 = clock_start();
 
