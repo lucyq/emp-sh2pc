@@ -229,11 +229,8 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  // cout << "label_key retrived" << endl;
-  // printIntegerArray(label_key,KEY_LENGTH,8);
+  // second HMAC in clusion
   // Integer* label = run_secure_hmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
-  // cout << "PRINT LABEL OUTPUT" << endl;
-  // printIntegerArray(label,KEY_LENGTH,8);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
@@ -241,11 +238,7 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   }
 
   Integer* value_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1); 
-  // cout << "value_key retrived" << endl;
-  // printIntegerArray(value_key,KEY_LENGTH,8);
   Integer* hmac_key = run_secure_hmac(value_key,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
-  // cout << "hmac_key retrived" << endl;
-  // printIntegerArray(hmac_key,KEY_LENGTH,8);
 
   //xor padded cid with hmac_key 
   Integer ciphertext[32];
