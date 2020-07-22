@@ -229,11 +229,8 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  // cout << "label_key retrived" << endl;
-  // printIntegerArray(label_key,KEY_LENGTH,8);
+  // second HMAC in clusion
   // Integer* label = run_secure_hmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
-  // cout << "PRINT LABEL OUTPUT" << endl;
-  // printIntegerArray(label,KEY_LENGTH,8);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
@@ -241,11 +238,7 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   }
 
   Integer* value_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1); 
-  // cout << "value_key retrived" << endl;
-  // printIntegerArray(value_key,KEY_LENGTH,8);
   Integer* hmac_key = run_secure_hmac(value_key,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
-  // cout << "hmac_key retrived" << endl;
-  // printIntegerArray(hmac_key,KEY_LENGTH,8);
 
   //xor padded cid with hmac_key 
   Integer ciphertext[32];
@@ -295,10 +288,12 @@ int main(int argc, char** argv) {
   parse_party_and_port(argv, &party, &port);
 
   char* k_share_hex = argv[3];
-  char* tmp1 = argv[4]; // 10x longer
-  char* tmp2 = argv[5]; // 10x longer 
-  char* tmp3 = argv[6]; // 10x longer
-  int num_updates = atoi(argv[7]); // num updates 
+  int num_updates = atoi(argv[4]); 
+
+
+  // char* p_hex = argv[4];
+  // char* r_hex = argv[5];
+  // char* rprime_hex = argv[6];
 
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
@@ -308,62 +303,69 @@ int main(int argc, char** argv) {
   setup_semi_honest(io, party);
 
   cout << "begin actual 2pc" << endl;
-  char* k_share = k_share_hex;
+  cout << num_updates << endl;
+
+
+  auto t1 = clock_start();
+
+  char* p_hex;
+  char* r_hex;
+  char* rprime_hex;
   static Integer k_reconstruct[KEY_LENGTH];
+  static Integer p_reconstruct[DATA_LENGTH];
+  static Integer r_reconstruct[RANDOM_LENGTH];
+  static Integer rprime_reconstruct[RPRIME_LENGTH];
+  char* k_share;
+  Integer* k_reconstruct_ptr;
+  k_share = k_share_hex;
+  convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
       //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
 
-  string p_hex(tmp1);
-  string r_hex(tmp2);
-  string rprime_hex(tmp3);
+  for (int i = 0; i < num_updates; i++) {
+    char* p;
+    char* r;
+    char* rprime;
+    Integer* p_reconstruct_ptr;
+    Integer* r_reconstruct_ptr;
+    Integer* rprime_reconstruct_ptr;
 
-  //char* p_tmp = new char[(DATA_LENGTH * 2) + 1];
-  //char* r_tmp = new char[(RANDOM_LENGTH * 2) + 1];
-  //char* rprime_tmp = new char[(RPRIME_LENGTH * 2) + 1];
+
+    p_hex = argv[5 + (3*i)];
+    r_hex = argv[6 + (3*i)];
+    rprime_hex = argv[7 + (3*i)];
+
+    p = p_hex;
+    r = r_hex;
+    rprime = rprime_hex;
+
+    //cout << p << endl;
+    //cout << r << endl;
+    //cout << rprime << endl;
+
+    convertHexToChar(p_hex,p,DATA_LENGTH);
+    //cout << 'p' << endl; 
+
+    convertHexToChar(r_hex,r,RANDOM_LENGTH);
+    //cout << 'r' << endl; 
+
+    convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+    //cout << "rprime" << endl; 
+
+    // convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
+
+    // cout << 'k' << endl; 
+
+    //cout << "GETS HERE" << endl;
 
 
-  for (int i = 0; i < num_updates; i ++) {
-    //cout << p_tmp << endl;
-    char* p_tmp;
-    char* r_tmp;
-    char* rprime_tmp;
-
-    // strcpy(p_tmp, p_hex.substr(32*i,32*(i+1)).c_str());
-    // strcpy(r_tmp, r_hex.substr(192*i,192*(i+1)).c_str());
-    // strcpy(rprime_tmp,rprime_hex.substr(64*i,64*(i+1)).c_str());
-
-    const char* p_tmp1 = (p_hex.substr(32*i,32*(i+1))).c_str();
-    const char* r_tmp1 = (r_hex.substr(192*i,192*(i+1))).c_str();
-    const char* rprime_tmp1 = (rprime_hex.substr(64*i,64*(i+1))).c_str();
-
-    p_tmp = (char*) p_tmp1; 
-    r_tmp = (char*) r_tmp1; 
-    rprime_tmp = (char*) rprime_tmp1; 
-    cout << p_tmp1 << endl;
-    cout << r_tmp1 << endl;
-    cout << rprime_tmp1 << endl;
-
-    //char* p = p_hex.substr(32*i,32*(i+1)); // substring
-    //char* r = r_hex.substr(192*i,192*(i+1)); // substring 
-    //char* rprime = rprime_hex.substr(64*i,64*(i+1)); // substring
-    char* p = p_tmp;
-    char* r = r_tmp;
-    char* rprime = rprime_tmp;
-
-    //convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
-    convertHexToChar(p_tmp,p,DATA_LENGTH);
-    convertHexToChar(r_tmp,r,RANDOM_LENGTH);
-    convertHexToChar(rprime_tmp,rprime,RPRIME_LENGTH);
-
-    auto t1 = clock_start();
-
-    static Integer p_reconstruct[DATA_LENGTH];
-    static Integer r_reconstruct[RANDOM_LENGTH];
-    static Integer rprime_reconstruct[RPRIME_LENGTH];
-
+    // for (int i = 0; i < KEY_LENGTH; i++) {
+    //   k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
+    //   //k_reconstruct[i] = Integer(8, '1', PUBLIC);
+    // }
     for (int i = 0; i < DATA_LENGTH; i++) {
       p_reconstruct[i] = Integer(8, p[i], PUBLIC);
     }
@@ -374,19 +376,23 @@ int main(int argc, char** argv) {
       rprime_reconstruct[i] = Integer(8, r[i], PUBLIC);
     }
 
+    //cout << "GETS HERE2" << endl;
+
     // reconstructing everything between Alice and Bob 
     // xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
     xor_reconstruct(p,p,DATA_LENGTH, p_reconstruct); 
     xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
     xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
-    Integer* k_reconstruct_ptr = k_reconstruct; 
-    Integer* p_reconstruct_ptr = p_reconstruct; 
-    Integer* r_reconstruct_ptr = r_reconstruct; 
-    Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
+    k_reconstruct_ptr = k_reconstruct; 
+    p_reconstruct_ptr = p_reconstruct; 
+    r_reconstruct_ptr = r_reconstruct; 
+    rprime_reconstruct_ptr = rprime_reconstruct; 
 
     // Calculate the token
+
     Integer* utk = find_secure_utk(k_reconstruct_ptr,p_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
+
     // shard it in half 
     Integer o1[96]; 
     // o2 is just r_reconstruct; 
@@ -416,14 +422,9 @@ int main(int argc, char** argv) {
     cout << "End of Party 2 Output" << endl;
 
 
-    cout << "2PC Time: " << time_from(t1) << endl;
-
-    //delete [] p_tmp;
-    //delete [] r_tmp;
-    //delete [] rprime_tmp;
-
-    cout << " COMPLETED " << i + 1 << " TIMES" << endl;
   }
+  cout << "2PC Time: " << time_from(t1) << endl;
+
   delete io;
   return 0;
 }
