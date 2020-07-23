@@ -412,7 +412,7 @@ int main(int argc, char** argv) {
     cout << endl;
     cout << "End of Party 1 Output" << endl;
 
-    cout << "Party 2 Output: ";
+    cout << "Party 2 Output:";
     for (int i = 0; i < 96; i++) {
       for (int j = 7; j > -1; j--) {
         cout << r_reconstruct[i][j].reveal(BOB);
