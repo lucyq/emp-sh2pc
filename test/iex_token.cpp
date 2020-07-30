@@ -319,10 +319,8 @@ int main(int argc, char** argv) {
   static Integer master_key[KEY_LENGTH];
 
   for (int i = 0; i < KEY_LENGTH; i++) {
-    master_key[i] = Integer(8, k_share[i], PUBLIC);
-    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
+    master_key[i] = Integer(8, k_share[i], ALICE);
   }
-  xor_reconstruct(k_share,k_share,KEY_LENGTH,master_key);
   Integer key1[KEY_LENGTH];
   Integer key2[KEY_LENGTH];
   Integer key3[KEY_LENGTH];
