@@ -290,16 +290,12 @@ int main(int argc, char** argv) {
   char* k_share_hex = argv[3];
   int num_updates = atoi(argv[4]); 
 
-
-  // char* p_hex = argv[4];
-  // char* r_hex = argv[5];
-  // char* rprime_hex = argv[6];
-
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
  // NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
-  NetIO * io = new NetIO(party==ALICE ? nullptr : "172.31.40.42", port);
+  // NetIO * io = new NetIO(party==ALICE ? nullptr : "172.31.40.42", port);
+  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
 
