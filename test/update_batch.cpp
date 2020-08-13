@@ -320,20 +320,12 @@ int main(int argc, char** argv) {
   string r_hex(tmp2);
   string rprime_hex(tmp3);
 
-  //char* p_tmp = new char[(DATA_LENGTH * 2) + 1];
-  //char* r_tmp = new char[(RANDOM_LENGTH * 2) + 1];
-  //char* rprime_tmp = new char[(RPRIME_LENGTH * 2) + 1];
-
 
   for (int i = 0; i < num_updates; i ++) {
     //cout << p_tmp << endl;
     char* p_tmp;
     char* r_tmp;
     char* rprime_tmp;
-
-    // strcpy(p_tmp, p_hex.substr(32*i,32*(i+1)).c_str());
-    // strcpy(r_tmp, r_hex.substr(192*i,192*(i+1)).c_str());
-    // strcpy(rprime_tmp,rprime_hex.substr(64*i,64*(i+1)).c_str());
 
     const char* p_tmp1 = (p_hex.substr(32*i,32*(i+1))).c_str();
     const char* r_tmp1 = (r_hex.substr(192*i,192*(i+1))).c_str();
@@ -346,9 +338,6 @@ int main(int argc, char** argv) {
     cout << r_tmp1 << endl;
     cout << rprime_tmp1 << endl;
 
-    //char* p = p_hex.substr(32*i,32*(i+1)); // substring
-    //char* r = r_hex.substr(192*i,192*(i+1)); // substring 
-    //char* rprime = rprime_hex.substr(64*i,64*(i+1)); // substring
     char* p = p_tmp;
     char* r = r_tmp;
     char* rprime = rprime_tmp;
