@@ -298,7 +298,8 @@ int main(int argc, char** argv) {
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
 //  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
-  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+ // NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+  NetIO * io = new NetIO(party==ALICE ? nullptr : "172.31.40.42", port);
 
   setup_semi_honest(io, party);
 
