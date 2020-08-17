@@ -405,7 +405,7 @@ int main(int argc, char** argv) {
     cout << "End of Party 2 Output" << endl;
 
 
-    cout << "2PC Time: " << time_from(t1) << endl;
+    cout << "2PC Time (ms): " << time_from(t1) << endl;
 
     //delete [] p_tmp;
     //delete [] r_tmp;

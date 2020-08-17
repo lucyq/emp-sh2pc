@@ -370,7 +370,7 @@ int main(int argc, char** argv) {
   cout << "LABEL: " << queries.size() << " " << queries.at(0).size() << " $" << endl;
   iex_token(key1,key2,key3,queries.at(0),queries.at(0).size());
 
-  cout << "2PC Time: " << time_from(t1) << endl;
+  cout << "2PC Time (ms): " << time_from(t1) << endl;
   delete io;
   return 0;
 }

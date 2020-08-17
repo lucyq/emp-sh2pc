@@ -420,7 +420,7 @@ int main(int argc, char** argv) {
 
 
   }
-  cout << "2PC Time: " << (time_from(t1)*0.001) << endl;
+  cout << "2PC Time (ms): " << (time_from(t1)*0.001) << endl;
 
   delete io;
   return 0;
