@@ -229,8 +229,6 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  // second HMAC in clusion
-  // Integer* label = run_secure_hmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
@@ -253,10 +251,6 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
     utk[64 + i] = rprime_reconstruct[i];
   }
 
-  // check if utk matches update-test 
-
-  //cout << "PRINT UTK ARRAY" << endl;
-  //printIntegerArray(utk,96,8);
   Integer* output = utk;
   return output;
 }
@@ -264,9 +258,6 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
 void convertHexToChar(char* hexChar, char* output, int ARRAY_LENGTH) { 
     // initialize the ASCII code string as empty. 
     string hex(hexChar);
-
-    //static char tmp[96];
-    //char* tmp2 = tmp; 
     for (size_t i = 0; i < hex.length(); i += 2) 
     { 
         // extract two characters from hex string 
@@ -290,12 +281,9 @@ int main(int argc, char** argv) {
   char* k_share_hex = argv[3];
   int num_updates = atoi(argv[4]); 
 
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
- // NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
-  // NetIO * io = new NetIO(party==ALICE ? nullptr : "172.31.40.42", port);
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+  // NetIO * io = new NetIO(party==ALICE ? nullptr : "3.134.81.7", port);
+  // NetIO * io = new NetIO(party==ALICE ? nullptr : "18.222.89.79", port);
 
   setup_semi_honest(io, party);
 

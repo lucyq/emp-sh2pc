@@ -255,12 +255,6 @@ int main(int argc, char** argv) {
   xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
   xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
-  // cout << "KEYYYY\n";
-  // printIntegerArray(k_reconstruct, KEY_LENGTH, 8);
-  // cout << "Q!!!\n";
-  // printIntegerArray(q_reconstruct, SN_LENGTH,8);
-
-
   Integer* k_reconstruct_ptr = k_reconstruct; 
   Integer* q_reconstruct_ptr = q_reconstruct; 
   Integer* r_reconstruct_ptr = r_reconstruct; 
