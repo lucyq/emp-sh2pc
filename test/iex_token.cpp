@@ -285,8 +285,9 @@ int main(int argc, char** argv) {
   parse_party_and_port(argv, &party, &port);
 
   char* master = "";
+  int offline_flag = stoi(argv[4]);
   vector<vector<string> > queries;
-  vector<string> wordlengths = split_words(argv[4]);
+  vector<string> wordlengths = split_words(argv[5]);
   int numqueries = wordlengths.size();
 
   if (party == ALICE) {
@@ -301,7 +302,7 @@ int main(int argc, char** argv) {
   } else {
     master = argv[3];
     for (int i = 0; i < numqueries; i++) {
-      vector<string> tmp = split_words(argv[5+i]);
+      vector<string> tmp = split_words(argv[6+i]);
       queries.push_back(tmp);
     }
   }
@@ -318,9 +319,16 @@ int main(int argc, char** argv) {
   auto t1 = clock_start();
   static Integer master_key[KEY_LENGTH];
 
-  for (int i = 0; i < KEY_LENGTH; i++) {
-    master_key[i] = Integer(8, k_share[i], ALICE);
+  if (offline_flag == 1) {
+    xor_reconstruct(k_share, k_share, KEY_LENGTH, master_key);
+  } else {
+    for (int i = 0; i < KEY_LENGTH; i++) {
+      master_key[i] = Integer(8, k_share[i], ALICE);
+    }
   }
+
+  printIntegerArray(master_key,32,8);
+
   Integer key1[KEY_LENGTH];
   Integer key2[KEY_LENGTH];
   Integer key3[KEY_LENGTH];
