@@ -13,7 +13,6 @@
 #include <string>
 #include <iostream>
 
-
 using namespace emp;
 using namespace std; 
 
@@ -132,8 +131,6 @@ void convertHexToChar(char* hexChar, char* output) {
     // initialize the ASCII code string as empty. 
     string hex(hexChar);
 
-    //static char tmp[96];
-    //char* tmp2 = tmp; 
     for (size_t i = 0; i < hex.length(); i += 2) 
     { 
         // extract two characters from hex string 
@@ -148,6 +145,23 @@ void convertHexToChar(char* hexChar, char* output) {
     } 
 } 
 
+void xor_reconstruct(char* int1, char* int2, int output_length, Integer* output) {
+  Integer intMsg1[output_length];
+  for (int i = 0; i < output_length; i++) {
+    intMsg1[i] = Integer(8, int1[i], ALICE);
+  }
+  Integer intMsg2[output_length];
+  for (int i = 0; i < output_length; i++) {
+    intMsg2[i] = Integer(8, int2[i], BOB);
+  }
+
+  for (int i = 0; i < output_length; i++) {
+    output[i] = intMsg1[i] ^ intMsg2[i]; 
+  }
+  return;
+
+}
+
 bool compareUtk(char* expected, Integer* actual) {
   for (int i = 0; i < 96; i++) {
     for (int j = 0; j < 8; j++) {
@@ -159,7 +173,7 @@ bool compareUtk(char* expected, Integer* actual) {
   return true; 
 }
 
-void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
+void hexStringToInteger(char* input, int input_length, Integer* output, int PARTY) {
   char* temp = input;
   convertHexToChar(input,temp);
   for (int i = 0; i < input_length; i++) {
@@ -169,89 +183,70 @@ void reconstruct(char* input, int input_length, Integer* output, int PARTY) {
 }
 
 int main(int argc, char** argv) {
-
+  int ciphertextlength = 192; // length in characters
   int port, party;
   parse_party_and_port(argv, &party, &port);
 
-  char* key = ""; // in hex
-  char* record_id = ""; // in hex
-  char* ciphertext = ""; // in hex, 
+  char* key = argv[3]; // in hex
+  int offline_flag = stoi(argv[4]);
+  int num_files = stoi(argv[5]);
 
-  int num_ciphertexts = atoi(argv[4]); // num updates 
-  if (party == ALICE) {
-    key = argv[3];
-  }
-  cout << "KEY: " << key << endl;
-
-
-  const char* record_ids[num_ciphertexts];
-  const char* ciphertexts[num_ciphertexts];
-
- for (int ct_count = 0; ct_count < num_ciphertexts; ct_count++) {
-  if (party == BOB) {   
-   
-    record_ids[ct_count] = argv[ct_count+5];
-    ciphertexts[ct_count] = argv[ct_count+6];
-    
-  } else {
-    record_ids[ct_count] = "";
-    ciphertexts[ct_count] = "";
-  }
- }
-
-
-  for (int ct_count = 0; ct_count < num_ciphertexts; ct_count++) {
-    cout << record_ids[ct_count] << endl;
-    cout << ciphertexts[ct_count] << endl;
-  }
-  
-
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
-  int ciphertextlength = 192; // length in characters
-  // convert key to Integer 
-  Integer key_int[KEY_LENGTH];
-  reconstruct(key,32,key_int,ALICE);
 
+  // // convert key to Integer 
+  char* k_share = key;
+  convertHexToChar(key,k_share);
 
-  Integer record_int[32];
-  Integer ciphertext_int[ciphertextlength];
+  static Integer key_int[KEY_LENGTH];
 
-  for (int ct_count = 0; ct_count < num_ciphertexts; ct_count++) {
-
-    cout << ct_count << endl;
-    reconstruct((char*)record_ids[ct_count],32,record_int,BOB);
-    printIntegerArray(record_int, 32, 8);
-  //   // // TODO account for different lengths of ciphertext (i.e. phase 2)
-
-    reconstruct((char*)ciphertexts[ct_count],ciphertextlength,ciphertext_int,BOB);
-    Integer* decrypt_key = run_secure_hmac(key_int,32,record_int,32);
-    printIntegerArray(decrypt_key, 32, 8);
-
-    // NOTE: Only works up to 32 * 256 character ciphertext 
-    Integer output[ciphertextlength];
-    Integer random_counter[ciphertextlength/32][32];
-    for (int i = 0; i < ciphertextlength/32; i++) {
-      for (int j = 0; j < 31; j++) {
-        random_counter[i][j] = Integer(8, 0, ALICE);
-      }
-      random_counter[i][31] = Integer(8, i + 1, ALICE);
-      Integer* decrypt_key = run_secure_hmac(key_int,32,record_int,32);
-      Integer* tmp_key = run_secure_hmac(decrypt_key,32,random_counter[i],32);
-
-      for (int k = 0; k < 32; k++) {
-        output[(32*i) + k] = tmp_key[k] ^ ciphertext_int[(32*i) + k]; 
-      }
+  if (offline_flag == 1) {
+    xor_reconstruct(k_share, k_share, KEY_LENGTH, key_int);
+  } else {
+    for (int i = 0; i < KEY_LENGTH; i++) {
+      key_int[i] = Integer(8, k_share[i], ALICE);
     }
-    reveal(output,ciphertextlength,"output");
   }
 
+  char* record_id_hex;
+  char* ct_hex;
 
+  static Integer record_int[32];
+  static Integer ciphertext_int[192]; // ct leng
+  static Integer output[192];
+  static Integer random_counter[192/32][32];
 
+  for (int i = 0; i < num_files; i++) {
+    if (party == BOB) {
+      record_id_hex = argv[6 + (2*i)];
+      ct_hex = argv[7 + (2*i)];
+    } else {
+      record_id_hex = "";
+      ct_hex = "";
+    }
+    
+    hexStringToInteger(record_id_hex,32,record_int,BOB);
+    hexStringToInteger(ct_hex,ciphertextlength,ciphertext_int,BOB);
+
+    // // NOTE: Only works up to 32 * 256 character ciphertext 
+    Integer random_counter[ciphertextlength/32][32];
+
+    Integer* decrypt_key = run_secure_hmac(key_int,32,record_int,32);
+    for (int j = 0; j < ciphertextlength/32; j++) {
+      for (int k = 0; k < 31; k++) {
+        random_counter[j][k] = Integer(8, 0, ALICE);
+      }
+      random_counter[j][31] = Integer(8, j + 1, ALICE);
+      Integer* tmp_key = run_secure_hmac(decrypt_key,32,random_counter[j],32);
+      // printIntegerArray(tmp_key, 32, 8);
+
+      for (int l = 0; l < 32; l++) {
+        output[(32*j) + l] = tmp_key[l] ^ ciphertext_int[(32*j) + l]; 
+      }
+    }
+    reveal(output,ciphertextlength,"\n");
+  }
   return 0;
 }
 
