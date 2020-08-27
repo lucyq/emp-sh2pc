@@ -145,6 +145,23 @@ void convertHexToChar(char* hexChar, char* output) {
     } 
 } 
 
+void xor_reconstruct(char* int1, char* int2, int output_length, Integer* output) {
+  Integer intMsg1[output_length];
+  for (int i = 0; i < output_length; i++) {
+    intMsg1[i] = Integer(8, int1[i], ALICE);
+  }
+  Integer intMsg2[output_length];
+  for (int i = 0; i < output_length; i++) {
+    intMsg2[i] = Integer(8, int2[i], BOB);
+  }
+
+  for (int i = 0; i < output_length; i++) {
+    output[i] = intMsg1[i] ^ intMsg2[i]; 
+  }
+  return;
+
+}
+
 bool compareUtk(char* expected, Integer* actual) {
   for (int i = 0; i < 96; i++) {
     for (int j = 0; j < 8; j++) {
@@ -171,6 +188,7 @@ int main(int argc, char** argv) {
   parse_party_and_port(argv, &party, &port);
 
   char* key = ""; // in hex
+  int offline_flag = stoi(argv[4]);
   char* record_id = ""; // in hex
   char* ciphertext = ""; // in hex, 
 
@@ -180,9 +198,9 @@ int main(int argc, char** argv) {
     ciphertext = "";
 
   } else {
-    key = "";
-    record_id = argv[4];
-    ciphertext = argv[5];
+    key = argv[3];
+    record_id = argv[5];
+    ciphertext = argv[6];
 
   }
 
@@ -194,9 +212,22 @@ int main(int argc, char** argv) {
   setup_semi_honest(io, party);
   int ciphertextlength = 192; // length in characters
   // convert key to Integer 
-  Integer key_int[KEY_LENGTH];
-  hexStringToInteger(key,32,key_int,ALICE);
+  char* k_share = key;
+  convertHexToChar(key,k_share);
+
+  static Integer key_int[KEY_LENGTH];
+
+  if (offline_flag == 1) {
+    xor_reconstruct(k_share, k_share, KEY_LENGTH, key_int);
+  } else {
+    for (int i = 0; i < KEY_LENGTH; i++) {
+      key_int[i] = Integer(8, k_share[i], ALICE);
+    }
+  }
+
+  ///hexStringToInteger(key,32,key_int,ALICE);
   printIntegerArray(key_int, 32, 8);
+
   Integer record_int[32];
   hexStringToInteger(record_id,32,record_int,BOB);
   // convert record_id to Integer 
