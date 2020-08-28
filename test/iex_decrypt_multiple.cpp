@@ -183,6 +183,7 @@ void hexStringToInteger(char* input, int input_length, Integer* output, int PART
 }
 
 int main(int argc, char** argv) {
+  // NOTE: Only works up to 32 * 256 character ciphertext 
   int ciphertextlength = 192; // length in characters
   int port, party;
   parse_party_and_port(argv, &party, &port);
@@ -194,8 +195,9 @@ int main(int argc, char** argv) {
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
+  auto t1 = clock_start();
 
-  // // convert key to Integer 
+
   char* k_share = key;
   convertHexToChar(key,k_share);
 
@@ -217,10 +219,10 @@ int main(int argc, char** argv) {
   static Integer output[192];
   static Integer random_counter[192/32][32];
 
-  for (int i = 0; i < num_files; i++) {
+  for (int f = 0; f < num_files; f++) {
     if (party == BOB) {
-      record_id_hex = argv[6 + (2*i)];
-      ct_hex = argv[7 + (2*i)];
+      record_id_hex = argv[6 + (2*f)];
+      ct_hex = argv[7 + (2*f)];
     } else {
       record_id_hex = "";
       ct_hex = "";
@@ -229,24 +231,25 @@ int main(int argc, char** argv) {
     hexStringToInteger(record_id_hex,32,record_int,BOB);
     hexStringToInteger(ct_hex,ciphertextlength,ciphertext_int,BOB);
 
-    // // NOTE: Only works up to 32 * 256 character ciphertext 
-    Integer random_counter[ciphertextlength/32][32];
-
-    Integer* decrypt_key = run_secure_hmac(key_int,32,record_int,32);
-    for (int j = 0; j < ciphertextlength/32; j++) {
-      for (int k = 0; k < 31; k++) {
-        random_counter[j][k] = Integer(8, 0, ALICE);
+    for (int i = 0; i < ciphertextlength/32; i++) {
+      for (int j = 0; j < 31; j++) {
+        random_counter[i][j] = Integer(8, 0, ALICE);
       }
-      random_counter[j][31] = Integer(8, j + 1, ALICE);
-      Integer* tmp_key = run_secure_hmac(decrypt_key,32,random_counter[j],32);
-      // printIntegerArray(tmp_key, 32, 8);
+      random_counter[i][31] = Integer(8, i + 1, ALICE);
+      // doesn't work unless decryptkey in this loop
+      Integer* decrypt_key = run_secure_hmac(key_int,32,record_int,32);
+      Integer* tmp_key = run_secure_hmac(decrypt_key,32,random_counter[i],32);
 
-      for (int l = 0; l < 32; l++) {
-        output[(32*j) + l] = tmp_key[l] ^ ciphertext_int[(32*j) + l]; 
+      for (int k = 0; k < 32; k++) {
+        output[(32*i) + k] = tmp_key[k] ^ ciphertext_int[(32*i) + k]; 
       }
     }
     reveal(output,ciphertextlength,"\n");
   }
+
+  cout << "2PC Time (ms): " << (time_from(t1)*0.001) << endl;
+
+  delete io;
   return 0;
 }
 
