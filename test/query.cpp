@@ -8,6 +8,7 @@
 #include <ctype.h>
 
 #include "hmac.h"
+#include "hmac_optimized.h"
 
 using namespace emp;
 using namespace std; 
@@ -16,10 +17,17 @@ enum {
   SN_LENGTH = 12, KEY_LENGTH = 32, RANDOM_LENGTH = 32, RPRIME_LENGTH = 32, TOKEN_LENGTH = 1
 };
 
-void printInteger(Integer intToPrint, int bitSize) {
-  for (int i = bitSize -1; i >= 0; i--) {
-    cout << intToPrint[i].reveal();
+void print_uint8_t(uint8_t n) {
+  bitset<8> x(n);
+  cout << x;
+}
+
+void printSSLHash(uint8_t* sslHash, int arraySize) {
+  for(int i = 0; i < arraySize; i++) {
+    print_uint8_t(sslHash[i]);
+    cout << ", ";
   }
+  cout << endl;
   return;
 }
 
@@ -30,25 +38,6 @@ void printarray(char* array, int ARRAY_LENGTH) {
       }
       printf(", ");
     }
-  cout << endl;
-}
-
-void printIntegerArray(Integer* intToPrint, int arraySize, int bitSize) {
-  for(int i = 0; i < arraySize; i++) {
-    printInteger(intToPrint[i], bitSize);
-    cout << ", ";
-  }
-  cout << endl;
-  return;
-}
-
-void printHash(Integer* Message_Digest) {
-  cout << "Printing output hash: " << endl;
-  for (int i =0; i < SHA256HashSize; i++) {
-    for (int j =7; j >= 0; j--) {
-      cout << Message_Digest[i][j].reveal();
-    }
-  }
   cout << endl;
 }
 
@@ -89,8 +78,7 @@ Integer* runHmac(Integer* key, int key_length,Integer* message, int message_leng
   HMAC_Input(&context, message, message_length);
   HMAC_Result(&context, digest);
 
-  Integer* digest_ptr = new Integer(); 
-  digest_ptr = digest;
+  Integer* digest_ptr = digest;
 
   return digest_ptr;
 }
@@ -147,22 +135,17 @@ Integer* generate_secure_tokens(Integer* k_reconstruct, Integer* q_reconstruct, 
 
   ctr[0] = Integer(8,'1',PUBLIC);
 
-  Integer* label_key = runHmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
-  //cout << "PRINT LABEL OUTPUT" << endl;
-  //printIntegerArray(label,KEY_LENGTH,8);
+  Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
+  //Integer* tk1 = runHmac(label_key,KEY_LENGTH,ctr,TOKEN_LENGTH);
   for (int i = 0; i < KEY_LENGTH; i++) {
-  	tokens[i] = tk1[i];
+  	tokens[i] = label_key[i];
   }
 
-  Integer* tk2 = runHmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
+  Integer* tk2 = run_secure_hmac(k_reconstruct,KEY_LENGTH ,sn2, SN_LENGTH+1); 
 
   for (int i = 0; i < KEY_LENGTH; i++) {
   	tokens[KEY_LENGTH + i] = tk2[i];
   }
-
-  // cout << "PRINT TOKEN2 ARRAY" << endl;
-  // printIntegerArray(tokens,64,8);
   Integer* output = tokens;
   return output;
 }
@@ -193,18 +176,29 @@ void testQuery1() {
 
   char* tokens1 = find_tokens(key,data,random,rprimes);
   Integer* tokens2 = generate_secure_tokens(k,q,r,rprime); 
+
   assert(compareTokens(tokens1,tokens2) == true);
 }
 
-void convertHexToChar(char* hex, char* output, int output_length) {
-  for (int i = 0; i < output_length; i++) {
-    char c[2]; 
-    c[0] = hex[2*i];
-    c[1] = hex[2*i+1];
-    int number = (int) strtol(c,NULL,16);
-    output[i] = (char)number;
-  }
-}
+void convertHexToChar(char* hexChar, char* output, int ARRAY_LENGTH) { 
+    // initialize the ASCII code string as empty. 
+    string hex(hexChar);
+
+    //static char tmp[96];
+    //char* tmp2 = tmp; 
+    for (size_t i = 0; i < hex.length(); i += 2) 
+    { 
+        // extract two characters from hex string 
+        string part = hex.substr(i, 2); 
+  
+        // change it into base 16 and  
+        // typecast as the character 
+        char ch = stoul(part, nullptr, 16); 
+  
+        // add this char to final ASCII string 
+        output[i/2] = ch;
+    } 
+} 
 
 int main(int argc, char** argv) {
   int port, party;
@@ -215,17 +209,11 @@ int main(int argc, char** argv) {
   char* r_hex = argv[5];
   char* rprime_hex = argv[6];
 
-
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
-  NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+// NetIO * io = new NetIO(party==ALICE ? nullptr : "18.221.224.217", port); // aws
+// NetIO * io = new NetIO(party==ALICE ? nullptr : "34.70.234.217", port); // gcloud
+ NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
 
   setup_semi_honest(io, party);
-
-  testQuery1();  
-  //testUpdate2();
-  cout << "PASSED" << endl;
 
   cout << "begin query 2pc" << endl;
 
@@ -237,6 +225,8 @@ int main(int argc, char** argv) {
   convertHexToChar(q_hex,q,SN_LENGTH);
   convertHexToChar(r_hex,r,RANDOM_LENGTH);
   convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+  
+  auto t1 = clock_start();
 
   static Integer k_reconstruct[KEY_LENGTH];
   static Integer q_reconstruct[SN_LENGTH];
@@ -245,9 +235,7 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
-  printIntegerArray(k_reconstruct, KEY_LENGTH,8);
 
   for (int i = 0; i < SN_LENGTH; i++) {
     q_reconstruct[i] = Integer(8, q[i], PUBLIC);
@@ -261,8 +249,6 @@ int main(int argc, char** argv) {
     rprime_reconstruct[i] = Integer(8, rprime[i], PUBLIC);
   }
 
-  // printIntegerArray(k_reconstruct, KEY_LENGTH,8);
-
   // reconstructing everything between Alice and Bob 
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
   xor_reconstruct(q,q,SN_LENGTH, q_reconstruct); 
@@ -274,14 +260,12 @@ int main(int argc, char** argv) {
   Integer* r_reconstruct_ptr = r_reconstruct; 
   Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
 
-  printIntegerArray(k_reconstruct_ptr, KEY_LENGTH,8);
-
   // Calculate the token
 
   Integer* tokens = generate_secure_tokens(k_reconstruct_ptr,q_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
   Integer tokensA[KEY_LENGTH * 2];
   Integer tokensB[KEY_LENGTH * 2];
-
+  
   for (int i = 0; i < KEY_LENGTH; i++) {
     tokensA[i] = tokens[i] ^ r_reconstruct[i];
   }
@@ -298,7 +282,7 @@ int main(int argc, char** argv) {
 
   cout << "Party 1 Output:";
   for (int i = 0; i < KEY_LENGTH * 2; i++) {
-    for (int j = 0; j < 8; j++) {
+    for (int j = BYTE_BITS-1; j >= 0; j--) {
       cout << tokensA[i][j].reveal(ALICE);
     }
     cout << ",";
@@ -307,7 +291,7 @@ int main(int argc, char** argv) {
 
   cout << "Party 2 Output:";
   for (int i = 0; i < KEY_LENGTH * 2; i++) {
-    for (int j = 0; j < 8; j++) {
+    for (int j = BYTE_BITS-1; j >= 0; j--) {
       cout << tokensB[i][j].reveal(BOB);
     }
     cout << ",";
@@ -315,42 +299,7 @@ int main(int argc, char** argv) {
   cout << "End of Party 2 Output" << endl;
 
 
-  // //revealing the output 
-
-  // cout << "reveal Alice output for tk1" << endl;
-  // for (int i = 0; i < KEY_LENGTH; i++) {
-  //   for (int j = 0; j < 8; j++) {
-  //     cout << tk1_A[i][j].reveal(ALICE);
-  //   }
-  //   cout << ", ";
-  // }
-  // cout << endl;
-
-  // cout << "reveal Bob output for tk1" << endl;
-  // for (int i = 0; i < RANDOM_LENGTH; i++) {
-  //   for (int j = 0; j < 8; j++) {
-  //     cout << r_reconstruct[i][j].reveal(BOB);
-  //   }
-  //   cout << ", ";
-  // }
-  // cout << endl;
-  // cout << "reveal Alice output for tk2" << endl;
-  // for (int i = 0; i < KEY_LENGTH; i++) {
-  //   for (int j = 0; j < 8; j++) {
-  //     cout << tk2_A[i][j].reveal(ALICE);
-  //   }
-  //   cout << ", ";
-  // }
-  // cout << endl;
-
-  // cout << "reveal Bob output for tk2" << endl;
-  // for (int i = 0; i < RPRIME_LENGTH; i++) {
-  //   for (int j = 0; j < 8; j++) {
-  //     cout << rprime_reconstruct[i][j].reveal(BOB);
-  //   }
-  //   cout << ", ";
-  // }
-  // cout << endl;
+  cout << "2PC Time (ms): " << (time_from(t1) * 0.001) << endl;
 
   delete io;
   return 0;

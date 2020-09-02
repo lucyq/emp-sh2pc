@@ -229,8 +229,11 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  // second HMAC in clusion
+  // cout << "label_key retrived" << endl;
+  // printIntegerArray(label_key,KEY_LENGTH,8);
   // Integer* label = run_secure_hmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
+  // cout << "PRINT LABEL OUTPUT" << endl;
+  // printIntegerArray(label,KEY_LENGTH,8);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
@@ -238,7 +241,11 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   }
 
   Integer* value_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn2,SN_LENGTH + 1); 
+  // cout << "value_key retrived" << endl;
+  // printIntegerArray(value_key,KEY_LENGTH,8);
   Integer* hmac_key = run_secure_hmac(value_key,KEY_LENGTH,rprime_reconstruct,RPRIME_LENGTH);
+  // cout << "hmac_key retrived" << endl;
+  // printIntegerArray(hmac_key,KEY_LENGTH,8);
 
   //xor padded cid with hmac_key 
   Integer ciphertext[32];
@@ -299,6 +306,9 @@ int main(int argc, char** argv) {
 
   setup_semi_honest(io, party);
 
+  //testUpdate1();  
+  //testUpdate2();
+
   cout << "begin actual 2pc" << endl;
   char* k_share = k_share_hex;
   char* p = p_hex;
@@ -308,8 +318,6 @@ int main(int argc, char** argv) {
   convertHexToChar(p_hex,p,DATA_LENGTH);
   convertHexToChar(r_hex,r,RANDOM_LENGTH);
   convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
-
-  auto t1 = clock_start();
 
   static Integer k_reconstruct[KEY_LENGTH];
   static Integer p_reconstruct[DATA_LENGTH];
@@ -372,9 +380,6 @@ int main(int argc, char** argv) {
     cout << ",";
   }
   cout << "End of Party 2 Output" << endl;
-
-
-  cout << "2PC Time (ms): " << (time_from(t1)*0.001) << endl;
 
   delete io;
   return 0;

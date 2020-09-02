@@ -229,8 +229,6 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
   token[0] = Integer(8,'1',PUBLIC);
 
   Integer* label_key = run_secure_hmac(k_reconstruct,KEY_LENGTH,sn1,SN_LENGTH + 1);
-  // second HMAC in clusion
-  // Integer* label = run_secure_hmac(label_key,KEY_LENGTH,token,TOKEN_LENGTH);
 
   static Integer utk[96];
   for (int i = 0; i < 32; i++) {
@@ -253,10 +251,6 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
     utk[64 + i] = rprime_reconstruct[i];
   }
 
-  // check if utk matches update-test 
-
-  //cout << "PRINT UTK ARRAY" << endl;
-  //printIntegerArray(utk,96,8);
   Integer* output = utk;
   return output;
 }
@@ -264,9 +258,6 @@ Integer* find_secure_utk(Integer* k_reconstruct, Integer* p_reconstruct, Integer
 void convertHexToChar(char* hexChar, char* output, int ARRAY_LENGTH) { 
     // initialize the ASCII code string as empty. 
     string hex(hexChar);
-
-    //static char tmp[96];
-    //char* tmp2 = tmp; 
     for (size_t i = 0; i < hex.length(); i += 2) 
     { 
         // extract two characters from hex string 
@@ -288,92 +279,135 @@ int main(int argc, char** argv) {
   parse_party_and_port(argv, &party, &port);
 
   char* k_share_hex = argv[3];
-  char* p_hex = argv[4];
-  char* r_hex = argv[5];
-  char* rprime_hex = argv[6];
+  int num_updates = atoi(argv[4]); 
 
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.116.70.95", port);
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "10.38.26.99", port); // Andrew
-//  NetIO * io = new NetIO(party==ALICE ? nullptr : "192.168.0.153", port);
   NetIO * io = new NetIO(party==ALICE ? nullptr : "127.0.0.1", port);
+  // NetIO * io = new NetIO(party==ALICE ? nullptr : "3.134.81.7", port);
+  // NetIO * io = new NetIO(party==ALICE ? nullptr : "18.222.89.79", port);
 
   setup_semi_honest(io, party);
 
   cout << "begin actual 2pc" << endl;
-  char* k_share = k_share_hex;
-  char* p = p_hex;
-  char* r = r_hex;
-  char* rprime = rprime_hex;
-  convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
-  convertHexToChar(p_hex,p,DATA_LENGTH);
-  convertHexToChar(r_hex,r,RANDOM_LENGTH);
-  convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+  cout << num_updates << endl;
+
 
   auto t1 = clock_start();
 
+  char* p_hex;
+  char* r_hex;
+  char* rprime_hex;
   static Integer k_reconstruct[KEY_LENGTH];
   static Integer p_reconstruct[DATA_LENGTH];
   static Integer r_reconstruct[RANDOM_LENGTH];
   static Integer rprime_reconstruct[RPRIME_LENGTH];
-
+  char* k_share;
+  Integer* k_reconstruct_ptr;
+  k_share = k_share_hex;
+  convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
   for (int i = 0; i < KEY_LENGTH; i++) {
     k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
-    //k_reconstruct[i] = Integer(8, '1', PUBLIC);
+      //k_reconstruct[i] = Integer(8, '1', PUBLIC);
   }
-  for (int i = 0; i < DATA_LENGTH; i++) {
-    p_reconstruct[i] = Integer(8, p[i], PUBLIC);
-  }
-  for (int i = 0; i < RANDOM_LENGTH; i++) {
-    r_reconstruct[i] = Integer(8, r[i], PUBLIC);
-  }
-  for (int i = 0; i < RPRIME_LENGTH; i++) {
-    rprime_reconstruct[i] = Integer(8, r[i], PUBLIC);
-  }
-
-  // reconstructing everything between Alice and Bob 
   xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
-  xor_reconstruct(p,p,DATA_LENGTH, p_reconstruct); 
-  xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
-  xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
 
-  Integer* k_reconstruct_ptr = k_reconstruct; 
-  Integer* p_reconstruct_ptr = p_reconstruct; 
-  Integer* r_reconstruct_ptr = r_reconstruct; 
-  Integer* rprime_reconstruct_ptr = rprime_reconstruct; 
+  for (int i = 0; i < num_updates; i++) {
+    char* p;
+    char* r;
+    char* rprime;
+    Integer* p_reconstruct_ptr;
+    Integer* r_reconstruct_ptr;
+    Integer* rprime_reconstruct_ptr;
 
-  // Calculate the token
 
-  Integer* utk = find_secure_utk(k_reconstruct_ptr,p_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
+    p_hex = argv[5 + (3*i)];
+    r_hex = argv[6 + (3*i)];
+    rprime_hex = argv[7 + (3*i)];
 
-  // shard it in half 
-  Integer o1[96]; 
-  // o2 is just r_reconstruct; 
-  for (int i = 0; i < 96; i++) {
-    o1[i] = utk[i] ^ r_reconstruct[i];
-  }
+    p = p_hex;
+    r = r_hex;
+    rprime = rprime_hex;
 
-  //revealing the output 
+    //cout << p << endl;
+    //cout << r << endl;
+    //cout << rprime << endl;
 
-  cout << "Party 1 Output:";
-  for (int i = 0; i < 96; i++) {
-    for (int j = 7; j > -1; j--) {
-      cout << o1[i][j].reveal(ALICE);
+    convertHexToChar(p_hex,p,DATA_LENGTH);
+    //cout << 'p' << endl; 
+
+    convertHexToChar(r_hex,r,RANDOM_LENGTH);
+    //cout << 'r' << endl; 
+
+    convertHexToChar(rprime_hex,rprime,RPRIME_LENGTH);
+    //cout << "rprime" << endl; 
+
+    // convertHexToChar(k_share_hex,k_share,KEY_LENGTH);
+
+    // cout << 'k' << endl; 
+
+    //cout << "GETS HERE" << endl;
+
+
+    // for (int i = 0; i < KEY_LENGTH; i++) {
+    //   k_reconstruct[i] = Integer(8, k_share[i], PUBLIC);
+    //   //k_reconstruct[i] = Integer(8, '1', PUBLIC);
+    // }
+    for (int i = 0; i < DATA_LENGTH; i++) {
+      p_reconstruct[i] = Integer(8, p[i], PUBLIC);
     }
-    cout << ",";
-  }
-  cout << endl;
-  cout << "End of Party 1 Output" << endl;
-
-  cout << "Party 2 Output: ";
-  for (int i = 0; i < 96; i++) {
-    for (int j = 7; j > -1; j--) {
-      cout << r_reconstruct[i][j].reveal(BOB);
+    for (int i = 0; i < RANDOM_LENGTH; i++) {
+      r_reconstruct[i] = Integer(8, r[i], PUBLIC);
     }
-    cout << ",";
+    for (int i = 0; i < RPRIME_LENGTH; i++) {
+      rprime_reconstruct[i] = Integer(8, r[i], PUBLIC);
+    }
+
+    //cout << "GETS HERE2" << endl;
+
+    // reconstructing everything between Alice and Bob 
+    // xor_reconstruct(k_share,k_share,KEY_LENGTH, k_reconstruct); 
+    xor_reconstruct(p,p,DATA_LENGTH, p_reconstruct); 
+    xor_reconstruct(r,r,RANDOM_LENGTH, r_reconstruct);
+    xor_reconstruct(rprime,rprime,RPRIME_LENGTH, rprime_reconstruct);
+
+    k_reconstruct_ptr = k_reconstruct; 
+    p_reconstruct_ptr = p_reconstruct; 
+    r_reconstruct_ptr = r_reconstruct; 
+    rprime_reconstruct_ptr = rprime_reconstruct; 
+
+    // Calculate the token
+
+    Integer* utk = find_secure_utk(k_reconstruct_ptr,p_reconstruct_ptr,r_reconstruct_ptr,rprime_reconstruct_ptr);
+
+    // shard it in half 
+    Integer o1[96]; 
+    // o2 is just r_reconstruct; 
+    for (int i = 0; i < 96; i++) {
+      o1[i] = utk[i] ^ r_reconstruct[i];
+    }
+
+    //revealing the output 
+
+    cout << "Party 1 Output:";
+    for (int i = 0; i < 96; i++) {
+      for (int j = 7; j > -1; j--) {
+        cout << o1[i][j].reveal(ALICE);
+      }
+      cout << ",";
+    }
+    cout << endl;
+    cout << "End of Party 1 Output" << endl;
+
+    cout << "Party 2 Output:";
+    for (int i = 0; i < 96; i++) {
+      for (int j = 7; j > -1; j--) {
+        cout << r_reconstruct[i][j].reveal(BOB);
+      }
+      cout << ",";
+    }
+    cout << "End of Party 2 Output" << endl;
+
+
   }
-  cout << "End of Party 2 Output" << endl;
-
-
   cout << "2PC Time (ms): " << (time_from(t1)*0.001) << endl;
 
   delete io;

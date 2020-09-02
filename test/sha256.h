@@ -1,9 +1,5 @@
-#pragma once
 #include "emp-sh2pc/emp-sh2pc.h"
 using namespace emp;
-
-#define MERCH ALICE
-#define CUST BOB
 
 const int BITS = 32;
 
